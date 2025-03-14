@@ -225,6 +225,23 @@ export default function Profile() {
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="bg-blue-500 p-6 items-center">
+        <View className="absolute top-0 right-0 p-2">
+          <TouchableOpacity 
+            className="bg-blue-600 rounded-full p-2"
+            onPress={() => {
+              Alert.alert(
+                'Sign Out',
+                'Are you sure you want to sign out?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign Out', onPress: signOut, style: 'destructive' }
+                ]
+              );
+            }}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity onPress={pickImage} disabled={uploadingImage}>
           {uploadingImage ? (
             <View className="w-24 h-24 rounded-full bg-gray-300 items-center justify-center border-2 border-white">
@@ -249,8 +266,17 @@ export default function Profile() {
       </View>
       
       <View className="p-4">
-        <View className="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <View className="bg-white rounded-lg shadow-sm p-4 mb-4 relative">
           <Text className="text-lg font-semibold mb-4">Personal Information</Text>
+          
+          {!isEditing && (
+            <TouchableOpacity 
+              className="bg-blue-500 rounded-full p-3 items-center justify-center w-12 h-12 absolute right-4 top-4"
+              onPress={() => setIsEditing(true)}
+            >
+              <Ionicons name="pencil" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
           
           <View className="mb-4">
             <Text className="text-gray-600 mb-1">Name</Text>
@@ -313,45 +339,8 @@ export default function Profile() {
                 )}
               </TouchableOpacity>
             </View>
-          ) : (
-            <View>
-              <TouchableOpacity 
-                className="bg-blue-500 rounded-lg p-3 items-center mb-3"
-                onPress={() => setIsEditing(true)}
-              >
-                <Text className="text-white font-semibold">Edit Profile</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                className="bg-green-500 rounded-lg p-3 items-center"
-                onPress={pickImage}
-                disabled={uploadingImage}
-              >
-                {uploadingImage ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-semibold">Change Profile Picture</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+          ) : null}
         </View>
-        
-        <TouchableOpacity 
-          className="bg-red-500 rounded-lg p-3 items-center mb-8"
-          onPress={() => {
-            Alert.alert(
-              'Sign Out',
-              'Are you sure you want to sign out?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Sign Out', onPress: signOut, style: 'destructive' }
-              ]
-            );
-          }}
-        >
-          <Text className="text-white font-semibold">Sign Out</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
