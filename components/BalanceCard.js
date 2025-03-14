@@ -54,7 +54,7 @@ export default function BalanceCard() {
         <Text 
           className={`text-2xl font-bold ${payable ? 'text-red-500' : 'text-slate-500'}`}
         >
-          ${payable.toFixed(2)}
+          ৳{payable.toFixed(2)}
         </Text>
       </TouchableOpacity>
 
@@ -72,7 +72,7 @@ export default function BalanceCard() {
         <Text 
           className={`text-2xl font-bold ${receivable ? 'text-green-500' : 'text-slate-500'}`}
         >
-          ${receivable.toFixed(2)}
+          ৳{receivable.toFixed(2)}
         </Text>
       </TouchableOpacity>
     </View>

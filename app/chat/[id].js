@@ -17,7 +17,7 @@ const MessageItem = ({ message, currentUserId }) => {
         {message.amount && (
           <View className={`mb-2 p-2 rounded ${message.transactionType === 'add' ? 'bg-green-100' : 'bg-red-100'}`}>
             <Text className={`text-base font-bold ${message.transactionType === 'add' ? 'text-green-600' : 'text-red-600'}`}>
-              {message.transactionType === 'add' ? '+' : '-'} ${parseFloat(message.amount).toFixed(2)}
+              {message.transactionType === 'add' ? '+' : '-'} ৳{parseFloat(message.amount).toFixed(2)}
             </Text>
           </View>
         )}
@@ -110,13 +110,20 @@ export default function ChatDetail() {
       snapshot.forEach((doc) => {
         const data = doc.data();
         const timestamp = data.timestamp ? new Date(data.timestamp.toDate()) : new Date();
+        
+        // Format date as "15 Mar 2025"
+        const day = timestamp.getDate();
+        const month = timestamp.toLocaleString('en-US', { month: 'short' });
+        const year = timestamp.getFullYear();
+        const formattedDate = `${day} ${month} ${year}`;
+        
         messageList.push({
           id: doc.id,
           text: data.text,
           senderId: data.senderId,
           amount: data.amount,
           transactionType: data.transactionType,
-          date: timestamp.toLocaleDateString(),
+          date: formattedDate,
           time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
       });
@@ -197,7 +204,7 @@ export default function ChatDetail() {
       // Update the chatRoom document with the last message and timestamp
       const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
       await updateDoc(chatRoomRef, {
-        lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} $${parseFloat(amount).toFixed(2)}` : 'Sent an empty message'),
+        lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} ৳${parseFloat(amount).toFixed(2)}` : 'Sent an empty message'),
         lastMessageTime: serverTimestamp()
       });
       
@@ -293,7 +300,7 @@ export default function ChatDetail() {
           headerRight: () => (
             <View className="flex-row items-center mr-4">
               <Text className={`text-lg font-semibold ${currentUserBalance - partnerBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                ${(currentUserBalance - partnerBalance).toFixed(2)}
+                ৳{(currentUserBalance - partnerBalance).toFixed(2)}
               </Text>
              
             </View>
