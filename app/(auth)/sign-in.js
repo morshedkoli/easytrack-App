@@ -69,6 +69,11 @@ export default function SignIn() {
           onChangeText={setPassword}
           secureTextEntry
         />
+        <TouchableOpacity className="mt-2 self-end">
+          <Link href="/(auth)/forgot-password" className="text-blue-500 text-sm">
+            Forgot Password?
+          </Link>
+        </TouchableOpacity>
       </View>
       
       {/* Sign In Button */}
