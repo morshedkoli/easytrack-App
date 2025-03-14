@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="50%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#93c5fd" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background rounded rectangle -->
+  <rect x="10" y="10" width="780" height="280" rx="40" ry="40" fill="url(#bgGradient)" />
+  
+  <!-- Wallet icon -->
+  <g fill="#ffffff" transform="translate(50, 50) scale(0.4)">
+    <!-- Wallet body -->
+    <path d="M400,112H112C50.144,112,0,162.144,0,224v160c0,61.856,50.144,112,112,112h288c61.856,0,112-50.144,112-112V224
+      C512,162.144,461.856,112,400,112z M480,384c0,44.183-35.817,80-80,80H112c-44.183,0-80-35.817-80-80V224c0-44.183,35.817-80,80-80
+      h288c44.183,0,80,35.817,80,80V384z" />
+    
+    <!-- Wallet flap -->
+    <path d="M400,176H112c-26.51,0-48,21.49-48,48v160c0,26.51,21.49,48,48,48h288c26.51,0,48-21.49,48-48V224
+      C448,197.49,426.51,176,400,176z M416,384c0,8.837-7.163,16-16,16H112c-8.837,0-16-7.163-16-16V224c0-8.837,7.163-16,16-16
+      h288c8.837,0,16,7.163,16,16V384z" />
+    
+    <!-- Money symbol -->
+    <path d="M304,304h-96c-8.837,0-16-7.163-16-16s7.163-16,16-16h96c8.837,0,16,7.163,16,16S312.837,304,304,304z" />
+    <path d="M304,336h-96c-8.837,0-16-7.163-16-16s7.163-16,16-16h96c8.837,0,16,7.163,16,16S312.837,336,304,336z" />
+    <path d="M304,272h-96c-8.837,0-16-7.163-16-16s7.163-16,16-16h96c8.837,0,16,7.163,16,16S312.837,272,304,272z" />
+  </g>
+  
+  <!-- App name -->
+  <text x="400" y="170" font-family="Arial, sans-serif" font-size="80" font-weight="bold" text-anchor="middle" fill="#ffffff" stroke="#ffffff" stroke-width="1">
+    Easy Track
+  </text>
+</svg>
