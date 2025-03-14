@@ -48,7 +48,7 @@ export default function Profile() {
         await setDoc(userRef, {
           name: '',
           phoneNumber: '',
-          balance: 0,
+          
           profileImage: "",
           friends: [],
           createdAt: serverTimestamp()

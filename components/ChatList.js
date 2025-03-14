@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import LottieView from 'lottie-react-native';
+import ChatItem from './ChatItem';
 
 export default function ChatList() {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function ChatList() {
       fetchUsers();
     }
   }, [user]);
+  
 
   const fetchUsers = async (isRefresh = false) => {
     try {
@@ -75,14 +77,13 @@ export default function ChatList() {
           balancePromises.push(
             getDoc(doc(db, 'chatRooms', chatRoomId))
               .then(chatRoomDoc => {
-                let balance = 0;
-                let partnerBalance = 0;
+                let netBalance = 0;
                 
                 if (chatRoomDoc.exists()) {
                   const chatRoomData = chatRoomDoc.data();
                   const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
-                  balance = balances[user.id] || 0;
-                  partnerBalance = balances[friendId] || 0;
+                  // Calculate net balance
+                  netBalance = balances[user.id] - balances[friendId];
                 }
                 
                 return {
@@ -93,10 +94,7 @@ export default function ChatList() {
                   time: '',
                   unread: 0,
                   email: friendData.email,
-                  balance: chatRoomDoc.exists() ? (chatRoomDoc.data().balances?.[user.id] || 0) : 0,
-                  partnerBalance: chatRoomDoc.exists() ? (chatRoomDoc.data().balances?.[friendId] || 0) : 0,
-                  netBalance: (chatRoomDoc.exists() ? (chatRoomDoc.data().balances?.[friendId] || 0) : 0) - 
-                             (chatRoomDoc.exists() ? (chatRoomDoc.data().balances?.[user.id] || 0) : 0)
+                  netBalance: netBalance
                 };
               })
           );
@@ -162,50 +160,7 @@ export default function ChatList() {
   };
 
 
-  const ChatItem = ({ item, onPress }) => {
-    return (
-      <TouchableOpacity 
-        className="flex-row items-center p-3 border-b border-gray-100"
-        onPress={onPress}
-      >
-        {item.avatar ? (
-          <Image 
-            source={{ uri: item.avatar }} 
-            className="w-14 h-14 rounded-full mr-3"
-          />
-        ) : (
-          <View className="w-14 h-14 rounded-full bg-gray-300 items-center justify-center mr-3">
-            <Ionicons name="person" size={30} color="#fff" />
-          </View>
-        )}
-        <View className="flex-1 justify-center">
-          <View className="flex-row justify-between items-center">
-            <Text className="font-semibold text-lg">{item.name}</Text>
-            {item.time && <Text className="text-xs text-gray-500">{item.time}</Text>}
-          </View>
-          <View className="flex-row justify-between items-center mt-1">
-            <Text className="text-gray-600 text-sm" numberOfLines={1}>
-              {item.lastMessage}
-            </Text>
-            {item.unread > 0 && (
-              <View className="bg-green-500 rounded-full w-5 h-5 items-center justify-center">
-                <Text className="text-white text-xs font-bold">{item.unread}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        
-        {/* Balance Display */}
-        <View className="ml-2 items-end justify-center">
-          <Text 
-            className={`text-base font-semibold ${item.netBalance < 0 ? 'text-red-500' : 'text-green-500'}`}
-          >
-            ৳{(item.netBalance || 0).toFixed(2)}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+
 
   return (
     <View className="flex-1 bg-white">
@@ -265,13 +220,7 @@ export default function ChatList() {
         />
       )}
 
-      {/* New Chat Button */}
-      {/* <TouchableOpacity 
-        className="absolute bottom-6 right-6 bg-green-500 w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        onPress={() => router.push('/new-chat')}
-      >
-        <Ionicons name="chatbubble-ellipses" size={24} color="white" />
-      </TouchableOpacity> */}
+     
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,6 +40,10 @@ export default function ChatDetail() {
   const [balance, setBalance] = useState(0);
   const [partnerBalance, setPartnerBalance] = useState(0);
   const [isSending, setIsSending] = useState(false);
+  const [currentUserBalance, setCurrentUserBalance] = useState(0);
+  
+  // Add a ref for the FlatList to control scrolling
+  const flatListRef = useRef(null);
   
   // Initialize Firestore
   const db = getFirestore();
@@ -61,27 +65,19 @@ export default function ChatDetail() {
         return;
       }
 
-      // Get user's balance
-      const userDoc = await getDoc(doc(db, 'users', user.id));
-      if (userDoc.exists()) {
-        setBalance(userDoc.data().balance || 0);
-      } else {
-        // Initialize user's balance if not exists
-        await updateDoc(doc(db, 'users', user.id), { balance: 0 });
-      }
+      
       
       const chatRoomData = chatRoomDoc.data();
+      const otherUserId = chatRoomData.participants.find(id => id !== user.id);
+
+      // Get balances from chatroom document
+      const balances = chatRoomData.balances || {};
+      setCurrentUserBalance(balances[user.id] || 0);
+      setPartnerBalance(balances[otherUserId] || 0);
       
       // Find the other participant (not the current user)
-      const otherUserId = chatRoomData.participants.find(id => id !== user.id);
       
-      // Get chat partner's balance
-      if (otherUserId) {
-        const partnerDoc = await getDoc(doc(db, 'users', otherUserId));
-        if (partnerDoc.exists()) {
-          setPartnerBalance(partnerDoc.data().balance || 0);
-        }
-      }
+      
       
       if (otherUserId) {
         // Get the other user's profile
@@ -125,6 +121,13 @@ export default function ChatDetail() {
       
       setMessages(messageList);
       setLoading(false);
+      
+      // Scroll to the bottom when new messages arrive
+      setTimeout(() => {
+        if (flatListRef.current && messageList.length > 0) {
+          flatListRef.current.scrollToEnd({ animated: true });
+        }
+      }, 100);
     });
     
     // Clean up subscription on unmount
@@ -156,33 +159,49 @@ export default function ChatDetail() {
           transactionType
         };
         // Update user's balance in chatroom
-        const userDoc = await getDoc(doc(db, 'users', user.id));
-        const currentBalance = userDoc.data()?.balance || 0;
+        const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+        const chatRoomDoc = await getDoc(chatRoomRef);
+        const balances = chatRoomDoc.data()?.balances || {};
+        const currentUserBalance = balances[user.id] || 0;
+        const partnerUserBalance = balances[chatPartner.id] || 0;
+        
+        // Update local state with latest balances
+        setCurrentUserBalance(currentUserBalance);
+        setPartnerBalance(partnerUserBalance);
 
-        if (transactionType === 'add') {
-          // User adds money (increases their balance)
-          await updateDoc(doc(db, 'users', user.id), {
-            balance: currentBalance + amountNum
-          });
-          setBalance(currentBalance + amountNum);
-        } else {
-          // User subtracts money (decreases their balance)
-          await updateDoc(doc(db, 'users', user.id), {
-            balance: currentBalance - amountNum
-          });
-          setBalance(currentBalance - amountNum);
-        }
+        // Calculate new balances based on transaction type
+        const newUserBalance = transactionType === 'add' 
+          ? currentUserBalance + amountNum 
+          : currentUserBalance - amountNum;
+        
+     
+        // Update both user balances in the chatroom
+        await updateDoc(chatRoomRef, {
+          [`balances.${user.id}`]: newUserBalance,
+        });
+
+        setBalance(newUserBalance );
+        setCurrentUserBalance(currentUserBalance);
+        setPartnerBalance(partnerUserBalance);
       }
       
       await addDoc(messagesRef, messageData);
       
       setMessage('');
       setAmount('');
+      
+      // Scroll to bottom after sending a message
+      setTimeout(() => {
+        if (flatListRef.current) {
+          flatListRef.current.scrollToEnd({ animated: true });
+        }
+      }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
+      fetchChatRoomDetails();
     }
   };
 
@@ -255,12 +274,10 @@ export default function ChatDetail() {
           ),
           headerRight: () => (
             <View className="flex-row items-center mr-4">
-              <Text className="text-lg font-semibold text-gray-700">
-                ${(balance - partnerBalance).toFixed(2)}
+              <Text className={`text-lg font-semibold ${currentUserBalance - partnerBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                ${(currentUserBalance - partnerBalance).toFixed(2)}
               </Text>
-              <Text className={`text-sm ml-2 ${balance - partnerBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                {/* {balance - partnerBalance < 0 ? '(You owe)' : '(Owed to you)'} */}
-              </Text>
+             
             </View>
           ),
         }}
@@ -273,11 +290,14 @@ export default function ChatDetail() {
           </View>
         ) : (
           <FlatList
+            ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <MessageItem message={item} currentUserId={user.id} />}
             contentContainerStyle={{ paddingBottom: 10 }}
             inverted={false}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
         )}
       </View>

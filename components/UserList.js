@@ -43,7 +43,6 @@ export default function UserList() {
           friends: [], 
           email: user.email, 
           createdAt: serverTimestamp(),
-          balance: 0,
           profileImage: ""
         }, { merge: true });
         setFriendsList([]);
