@@ -78,20 +78,33 @@ export default function ChatList() {
             getDoc(doc(db, 'chatRooms', chatRoomId))
               .then(chatRoomDoc => {
                 let netBalance = 0;
+                let lastMessageTime = null;
+                let lastMessage = 'Tap to start chatting';
                 
                 if (chatRoomDoc.exists()) {
                   const chatRoomData = chatRoomDoc.data();
                   const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
                   // Calculate net balance
                   netBalance = balances[user.id] - balances[friendId];
+                  
+                  // Get last message time for sorting
+                  if (chatRoomData.lastMessageTime) {
+                    lastMessageTime = chatRoomData.lastMessageTime.toDate();
+                  }
+                  
+                  // Get last message if available
+                  if (chatRoomData.lastMessage) {
+                    lastMessage = chatRoomData.lastMessage;
+                  }
                 }
                 
                 return {
                   id: friendId,
                   name: friendData.name || friendData.email?.split('@')[0] || 'User',
                   avatar: friendData.profileImage || null,
-                  lastMessage: 'Tap to start chatting',
-                  time: '',
+                  lastMessage: lastMessage,
+                  time: lastMessageTime ? lastMessageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '',
+                  lastMessageTime: lastMessageTime || new Date(0), // Use epoch time if no messages yet
                   unread: 0,
                   email: friendData.email,
                   netBalance: netBalance
@@ -104,8 +117,13 @@ export default function ChatList() {
       // Wait for all balance promises to resolve
       const usersWithBalances = await Promise.all(balancePromises);
       
-      setAllUsers(usersWithBalances);
-      setChats(usersWithBalances);
+      // Sort users by lastMessageTime (most recent first)
+      const sortedUsers = [...usersWithBalances].sort((a, b) => {
+        return b.lastMessageTime - a.lastMessageTime;
+      });
+      
+      setAllUsers(sortedUsers);
+      setChats(sortedUsers);
     } catch (error) {
       console.error('Error fetching friends:', error);
     } finally {

@@ -22,7 +22,7 @@ const MessageItem = ({ message, currentUserId }) => {
           </View>
         )}
         <Text className="text-gray-800 text-base">{message.text}</Text>
-        <Text className="text-xs text-gray-500 text-right mt-1">{message.time}</Text>
+        <Text className="text-xs text-gray-500 text-right mt-1">{message.date} {message.time}</Text>
       </View>
     </View>
   );
@@ -109,25 +109,31 @@ export default function ChatDetail() {
       const messageList = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
+        const timestamp = data.timestamp ? new Date(data.timestamp.toDate()) : new Date();
         messageList.push({
           id: doc.id,
           text: data.text,
           senderId: data.senderId,
           amount: data.amount,
           transactionType: data.transactionType,
-          time: data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          date: timestamp.toLocaleDateString(),
+          time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
       });
       
       setMessages(messageList);
       setLoading(false);
       
-      // Scroll to the bottom when new messages arrive
-      setTimeout(() => {
-        if (flatListRef.current && messageList.length > 0) {
-          flatListRef.current.scrollToEnd({ animated: true });
-        }
-      }, 100);
+      // Scroll to the bottom when new messages arrive - improved with immediate attempt
+      if (flatListRef.current && messageList.length > 0) {
+        flatListRef.current.scrollToEnd({ animated: true });
+        // Also try with a slight delay to ensure rendering is complete
+        setTimeout(() => {
+          if (flatListRef.current) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }, 100);
+      }
     });
     
     // Clean up subscription on unmount
@@ -185,17 +191,29 @@ export default function ChatDetail() {
         setPartnerBalance(partnerUserBalance);
       }
       
+      // Add the message to the messages collection
       await addDoc(messagesRef, messageData);
+      
+      // Update the chatRoom document with the last message and timestamp
+      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+      await updateDoc(chatRoomRef, {
+        lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} $${parseFloat(amount).toFixed(2)}` : 'Sent an empty message'),
+        lastMessageTime: serverTimestamp()
+      });
       
       setMessage('');
       setAmount('');
       
-      // Scroll to bottom after sending a message
-      setTimeout(() => {
-        if (flatListRef.current) {
-          flatListRef.current.scrollToEnd({ animated: true });
-        }
-      }, 100);
+      // Scroll to bottom immediately after sending a message
+      if (flatListRef.current) {
+        flatListRef.current.scrollToEnd({ animated: false });
+        // Also try with a slight delay to ensure rendering is complete
+        setTimeout(() => {
+          if (flatListRef.current) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }, 100);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -298,50 +316,54 @@ export default function ChatDetail() {
             inverted={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            initialNumToRender={messages.length}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           />
         )}
       </View>
       
-      <View className="bg-white p-2 border-t border-gray-200">
-        <View className="flex-row items-center mb-2">
-          <View className="flex-row items-center bg-gray-100 rounded-lg p-1">
+      <View className="bg-white p-3 border-t border-gray-200">
+        <View className="flex-row items-center mb-3">
+          <View className="flex-row items-center bg-gray-100 rounded-lg p-2">
             <TouchableOpacity 
               onPress={() => setTransactionType('add')}
-              className={`px-3 py-1 rounded-md ${transactionType === 'add' ? 'bg-green-500' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-md ${transactionType === 'add' ? 'bg-green-500' : 'bg-gray-200'}`}
             >
-              <Text className={transactionType === 'add' ? 'text-white' : 'text-gray-600'}>দিলাম</Text>
+              <Text className={`text-base font-medium ${transactionType === 'add' ? 'text-white' : 'text-gray-600'}`}>দিলাম</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => setTransactionType('subtract')}
-              className={`px-3 py-1 rounded-md ml-1 ${transactionType === 'subtract' ? 'bg-red-500' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-md ml-2 ${transactionType === 'subtract' ? 'bg-red-500' : 'bg-gray-200'}`}
             >
-              <Text className={transactionType === 'subtract' ? 'text-white' : 'text-gray-600'}>পেলাম</Text>
+              <Text className={`text-base font-medium ${transactionType === 'subtract' ? 'text-white' : 'text-gray-600'}`}>পেলাম</Text>
             </TouchableOpacity>
           </View>
           <TextInput
-            className="ml-2 bg-gray-100 rounded-lg px-4 py-3 flex-1"
+            className="ml-3 bg-gray-100 rounded-lg px-5 py-4 flex-1 text-base"
             placeholder="টাকার পরিমাণ"
             value={amount}
             onChangeText={setAmount}
             keyboardType="numeric"
           />
         </View>
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-start mb-4">
           <TextInput
-            className="flex-1 bg-gray-100 rounded-lg px-4 py-3 mx-2"
+            className="flex-1 bg-gray-100 rounded-lg px-5 py-4 mx-2 min-h-[100] text-base"
             placeholder="মেসেজ লিখেন"
             value={message}
             onChangeText={setMessage}
             multiline
-            numberOfLines={3}
+            numberOfLines={4}
             textAlignVertical="top"
           />
-          <TouchableOpacity onPress={sendMessage} disabled={isSending}>
-            <View className={`w-10 h-10 rounded-full items-center justify-center ${isSending ? 'bg-gray-400' : 'bg-green-500'}`}>
+          <TouchableOpacity onPress={sendMessage} disabled={isSending} className="mt-2">
+            <View className={`w-20 h-20 rounded-full items-center justify-center ${isSending ? 'bg-gray-400' : 'bg-green-500'}`}>
               {isSending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Ionicons name="send" size={20} color="white" />
+                <Ionicons name="send" size={40} color="white" />
               )}
             </View>
           </TouchableOpacity>

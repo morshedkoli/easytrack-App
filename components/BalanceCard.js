@@ -44,7 +44,7 @@ export default function BalanceCard() {
         className="bg-white rounded-2xl p-4 flex-1 mr-2 shadow-sm"
       >
         <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-lg font-semibold text-gray-700">Payable</Text>
+          <Text className="text-lg font-semibold text-gray-700">দিবো</Text>
           <Ionicons 
             name='arrow-up-circle'
             size={24} 
@@ -62,7 +62,7 @@ export default function BalanceCard() {
         className="bg-white rounded-2xl p-4 flex-1 ml-2 shadow-sm"
       >
         <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-lg font-semibold text-gray-700">Receivable</Text>
+          <Text className="text-lg font-semibold text-gray-700">পাবো</Text>
           <Ionicons 
             name='arrow-down-circle'
             size={24} 
