@@ -6,6 +6,7 @@ import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapsh
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import LottieView from 'lottie-react-native';
+import { sendPushNotification } from '../../services/NotificationService';
 
 const MessageItem = ({ message, currentUserId }) => {
   const isMe = message.senderId === currentUserId;
@@ -240,6 +241,17 @@ export default function ChatDetail() {
         lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} ৳${parseFloat(amount).toFixed(2)}` : 'Sent an empty message'),
         lastMessageTime: serverTimestamp()
       });
+
+      // Send push notification to chat partner
+      const partnerDoc = await getDoc(doc(db, 'users', chatPartner.id));
+      if (partnerDoc.exists()) {
+        const partnerData = partnerDoc.data();
+        if (partnerData.expoPushToken) {
+          const notificationMessage = message.trim() || 'New transaction';
+          const amountValue = amount ? (transactionType === 'add' ? parseFloat(amount) : -parseFloat(amount)) : null;
+          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
+        }
+      }
       
       setMessage('');
       setAmount('');
