@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
+import { TextInput, Button, Card, Text } from 'react-native-paper';
 import { Link, Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import LottieView from 'lottie-react-native';
@@ -51,7 +52,7 @@ export default function SignUp() {
         />
       </View>
       
-      <Text className="text-3xl font-bold mb-6 text-center">Create Account</Text>
+      <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center' }}>Create Account</Text>
       
       {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
       {successMessage ? <Text className="text-green-500 mb-4 text-center">{successMessage}</Text> : null}
@@ -59,48 +60,52 @@ export default function SignUp() {
       <View className="mb-4">
         <Text className="text-gray-700 mb-2">Email</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          mode="outlined"
+          label="Email"
           placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          style={{ marginBottom: 16 }}
         />
       </View>
       
       <View className="mb-4">
         <Text className="text-gray-700 mb-2">Password</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          mode="outlined"
+          label="Password"
           placeholder="Create a password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          style={{ marginBottom: 16 }}
         />
       </View>
       
       <View className="mb-6">
         <Text className="text-gray-700 mb-2">Confirm Password</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          mode="outlined"
+          label="Confirm Password"
           placeholder="Confirm your password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
+          style={{ marginBottom: 16 }}
         />
       </View>
       
-      <TouchableOpacity 
-        className="bg-blue-500 rounded-lg p-4 items-center mb-4"
+      <Button 
+        mode="contained" 
         onPress={handleSignUp}
         disabled={isLoading}
+        style={{ marginBottom: 16 }}
+        contentStyle={{ paddingVertical: 8 }}
       >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white font-semibold text-lg">Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        {isLoading ? <ActivityIndicator color="white" /> : 'Sign Up'}
+      </Button>
       
       <View className="flex-row justify-center">
         <Text className="text-gray-600">Already have an account? </Text>

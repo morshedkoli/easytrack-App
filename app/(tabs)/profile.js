@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, ScrollView, Alert } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import { Surface, Avatar, TextInput, Button, IconButton, Text, ActivityIndicator, useTheme, Card, Divider } from 'react-native-paper';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -223,124 +224,129 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="bg-blue-500 p-6 items-center">
-        <View className="absolute top-0 right-0 p-2">
-          <TouchableOpacity 
-            className="bg-blue-600 rounded-full p-2"
-            onPress={() => {
-              Alert.alert(
-                'Sign Out',
-                'Are you sure you want to sign out?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Out', onPress: signOut, style: 'destructive' }
-                ]
-              );
-            }}
-          >
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity onPress={pickImage} disabled={uploadingImage}>
-          {uploadingImage ? (
-            <View className="w-24 h-24 rounded-full bg-gray-300 items-center justify-center border-2 border-white">
-              <ActivityIndicator color="#fff" />
-            </View>
-          ) : profileImage ? (
-            <Image 
-              source={{ uri: profileImage }} 
-              className="w-24 h-24 rounded-full border-2 border-white" 
-            />
-          ) : (
-            <View className="w-24 h-24 rounded-full bg-gray-300 items-center justify-center border-2 border-white">
-              <Ionicons name="person" size={40} color="#fff" />
-            </View>
-          )}
-        </TouchableOpacity>
+    <ScrollView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+      <Surface style={{ elevation: 4, backgroundColor: '#1976D2', padding: 24, alignItems: 'center', position: 'relative' }}>
+        <IconButton
+          icon="logout"
+          mode="contained-tonal"
+          size={24}
+          style={{ position: 'absolute', top: 8, right: 8 }}
+          onPress={() => {
+            Alert.alert(
+              'Sign Out',
+              'Are you sure you want to sign out?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Sign Out', onPress: signOut, style: 'destructive' }
+              ]
+            );
+          }}
+        />
         
-        <Text className="text-white text-xl font-bold mt-2">
+        <Avatar.Image
+          size={120}
+          source={profileImage ? { uri: profileImage } : require('../../assets/images/default-avatar.png')}
+          style={{ backgroundColor: '#64B5F6', marginBottom: 16 }}
+        />
+        
+        {uploadingImage && (
+          <ActivityIndicator
+            style={{ position: 'absolute', top: 72 }}
+            size="large"
+            color="#fff"
+          />
+        )}
+        
+        <IconButton
+          icon="camera"
+          mode="contained"
+          size={24}
+          style={{ position: 'absolute', bottom: 80, right: '35%', backgroundColor: '#2196F3' }}
+          onPress={pickImage}
+          disabled={uploadingImage}
+        />
+        
+        <Text variant="headlineSmall" style={{ color: '#fff', marginBottom: 4 }}>
           {name || user?.email?.split('@')[0] || 'User'}
         </Text>
-        <Text className="text-white text-sm opacity-80">{user?.email}</Text>
-      </View>
+        <Text variant="bodyMedium" style={{ color: '#E3F2FD' }}>{user?.email}</Text>
+      </Surface>
       
-      <View className="p-4">
-        <View className="bg-white rounded-lg shadow-sm p-4 mb-4 relative">
-          <Text className="text-lg font-semibold mb-4">Personal Information</Text>
-          
-          {!isEditing && (
-            <TouchableOpacity 
-              className="bg-blue-500 rounded-full p-3 items-center justify-center w-12 h-12 absolute right-4 top-4"
-              onPress={() => setIsEditing(true)}
-            >
-              <Ionicons name="pencil" size={20} color="#fff" />
-            </TouchableOpacity>
-          )}
-          
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-1">Name</Text>
+      <View style={{ padding: 16 }}>
+        <Card style={{ marginBottom: 16 }}>
+          <Card.Content>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text variant="titleLarge">Personal Information</Text>
+              {!isEditing && (
+                <IconButton
+                  icon="pencil"
+                  mode="contained"
+                  size={20}
+                  onPress={() => setIsEditing(true)}
+                />
+              )}
+            </View>
+            
+            <Divider style={{ marginBottom: 16 }} />
+            
             <TextInput
-              className={`border rounded-lg p-3 ${isEditing ? 'border-blue-400 bg-white' : 'border-gray-200 bg-gray-50'}`}
+              label="Name"
               value={name}
               onChangeText={setName}
+              mode="outlined"
+              disabled={!isEditing}
+              style={{ marginBottom: 16 }}
               placeholder="Enter your name"
-              editable={isEditing}
             />
-          </View>
-          
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-1">Email</Text>
+            
             <TextInput
-              className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+              label="Email"
               value={user?.email}
-              editable={false}
+              mode="outlined"
+              disabled
+              style={{ marginBottom: 16 }}
             />
-          </View>
-          
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-1">Phone Number</Text>
+            
             <TextInput
-              className={`border rounded-lg p-3 ${isEditing ? 'border-blue-400 bg-white' : 'border-gray-200 bg-gray-50'}`}
+              label="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
+              mode="outlined"
+              disabled={!isEditing}
+              style={{ marginBottom: 16 }}
               placeholder="Enter your phone number"
               keyboardType="phone-pad"
-              editable={isEditing}
             />
-          </View>
-          
-          {isEditing ? (
-            <View className="flex-row justify-end space-x-2">
-              <TouchableOpacity 
-                className="bg-gray-200 rounded-lg px-4 py-2"
-                onPress={() => {
-                  setIsEditing(false);
-                  if (profileExists) {
-                    checkUserProfile(); // Reset to original values only if profile exists
-                  } else {
-                    setName('');
-                    setPhoneNumber('');
-                  }
-                }}
-              >
-                <Text className="text-gray-800">Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                className="bg-blue-500 rounded-lg px-4 py-2"
-                onPress={saveProfile}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text className="text-white">Save</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          ) : null}
-        </View>
+            
+            {isEditing && (
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setIsEditing(false);
+                    if (profileExists) {
+                      checkUserProfile();
+                    } else {
+                      setName('');
+                      setPhoneNumber('');
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+                
+                <Button
+                  mode="contained"
+                  onPress={saveProfile}
+                  loading={loading}
+                  disabled={loading}
+                >
+                  Save
+                </Button>
+              </View>
+            )}
+          </Card.Content>
+        </Card>
       </View>
     </ScrollView>
   );

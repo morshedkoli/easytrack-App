@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import LottieView from 'lottie-react-native';
+import { TextInput, Button, Card, Text } from 'react-native-paper';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -41,7 +42,7 @@ export default function SignIn() {
         />
       </View>
       
-      <Text className="text-3xl font-bold mb-6 text-center">Sign In</Text>
+      <Text variant="displaySmall" style={{ marginBottom: 16, textAlign: 'center' }}>Sign In</Text>
 
       {/* Error Message */}
       {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
@@ -50,12 +51,14 @@ export default function SignIn() {
       <View className="mb-4">
         <Text className="text-gray-700 mb-2">Email</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          mode="outlined"
+          label="Email"
           placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          style={{ marginBottom: 16 }}
         />
       </View>
       
@@ -63,11 +66,13 @@ export default function SignIn() {
       <View className="mb-6">
         <Text className="text-gray-700 mb-2">Password</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          mode="outlined"
+          label="Password"
           placeholder="Enter your password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          style={{ marginBottom: 16 }}
         />
         <TouchableOpacity className="mt-2 self-end">
           <Link href="/(auth)/forgot-password" className="text-blue-500 text-sm">
@@ -77,17 +82,15 @@ export default function SignIn() {
       </View>
       
       {/* Sign In Button */}
-      <TouchableOpacity 
-        className="bg-blue-500 rounded-lg p-4 items-center mb-4"
+      <Button 
+        mode="contained" 
         onPress={handleSignIn}
         disabled={isLoading}
+        style={{ marginBottom: 16 }}
+        contentStyle={{ paddingVertical: 8 }}
       >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white font-semibold text-lg">Sign In</Text>
-        )}
-      </TouchableOpacity>
+        {isLoading ? <ActivityIndicator color="white" /> : 'Sign In'}
+      </Button>
       
       {/* Sign Up Link */}
       <View className="flex-row justify-center">
