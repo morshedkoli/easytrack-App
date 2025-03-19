@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 
 export default function BalanceCard() {
@@ -10,12 +10,14 @@ export default function BalanceCard() {
   const [receivable, setReceivable] = useState(0);
 
   useEffect(() => {
-    const fetchBalances = async () => {
-      const db = getFirestore();
-      const chatRoomsRef = collection(db, 'chatRooms');
-      const q = query(chatRoomsRef, where('participants', 'array-contains', user.id));
-      
-      const snapshot = await getDocs(q);
+    if (!user) return;
+
+    const db = getFirestore();
+    const chatRoomsRef = collection(db, 'chatRooms');
+    const q = query(chatRoomsRef, where('participants', 'array-contains', user.id));
+    
+    // Set up real-time listener for chat rooms
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalPayable = 0;
       let totalReceivable = 0;
 
@@ -33,9 +35,10 @@ export default function BalanceCard() {
 
       setPayable(totalPayable);
       setReceivable(totalReceivable);
-    };
+    });
 
-    if (user) fetchBalances();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, [user]);
 
   return (

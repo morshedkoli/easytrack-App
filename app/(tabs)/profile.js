@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Alert, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useNetwork } from '../../context/NetworkContext';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,6 +10,7 @@ import { Surface, Text, TextInput, Button, Avatar, IconButton, ActivityIndicator
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const { isOnline, savePendingOperation } = useNetwork();
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
@@ -193,19 +195,30 @@ export default function Profile() {
         profileData.profileImage = profileImage;
       }
       
-      // Create or update the profile
-      if (profileExists) {
-        await updateDoc(userRef, profileData);
+      if (!isOnline) {
+        // Store operation for later sync
+        await savePendingOperation({
+          type: 'profile',
+          userId: user.id,
+          data: profileData
+        });
+        setIsEditing(false);
+        Alert.alert('Success', 'Profile will be updated when online');
       } else {
-        // For new profiles, add creation date and email
-        profileData.email = user.email;
-        profileData.createdAt = new Date();
-        await setDoc(userRef, profileData);
-        setProfileExists(true);
+        // Create or update the profile
+        if (profileExists) {
+          await updateDoc(userRef, profileData);
+        } else {
+          // For new profiles, add creation date and email
+          profileData.email = user.email;
+          profileData.createdAt = new Date();
+          await setDoc(userRef, profileData);
+          setProfileExists(true);
+        }
+        
+        setIsEditing(false);
+        Alert.alert('Success', 'Profile updated successfully');
       }
-      
-      setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully');
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', 'Failed to update profile');

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import LottieView from 'lottie-react-native';
 import ChatItem from './ChatItem';
@@ -21,8 +21,85 @@ export default function ChatList() {
   useEffect(() => {
     if (user) {
       fetchUsers();
+      // Set up real-time listeners for chat rooms
+      return setupChatRoomListeners();
     }
   }, [user]);
+
+  const setupChatRoomListeners = () => {
+    if (!user || !user.id) return;
+
+    // Get the current user's friends list
+    const userRef = doc(db, 'users', user.id);
+    getDoc(userRef).then((userDoc) => {
+      if (!userDoc.exists()) return;
+
+      const userData = userDoc.data();
+      const friendsList = userData.friends || [];
+
+      // Set up listeners for each chat room
+      const unsubscribes = friendsList.map(friendId => {
+        const participants = [user.id, friendId].sort();
+        const chatRoomId = participants.join('_');
+        const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+
+        return onSnapshot(chatRoomRef, (chatRoomDoc) => {
+          if (!chatRoomDoc.exists()) return;
+
+          const chatRoomData = chatRoomDoc.data();
+          const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
+          const netBalance = balances[user.id] - balances[friendId];
+
+          // Update the specific chat's balance in the state
+          setChats(prevChats => {
+            const updatedChats = prevChats.map(chat => {
+              if (chat.id === friendId) {
+                return {
+                  ...chat,
+                  netBalance,
+                  lastMessage: chatRoomData.lastMessage || chat.lastMessage,
+                  lastMessageTime: chatRoomData.lastMessageTime ? chatRoomData.lastMessageTime.toDate() : chat.lastMessageTime,
+                  time: chatRoomData.lastMessageTime ? 
+                    chatRoomData.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                    chat.time
+                };
+              }
+              return chat;
+            });
+
+            // Sort by last message time
+            return [...updatedChats].sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+          });
+
+          // Update allUsers state as well to keep it in sync
+          setAllUsers(prevUsers => {
+            const updatedUsers = prevUsers.map(user => {
+              if (user.id === friendId) {
+                return {
+                  ...user,
+                  netBalance,
+                  lastMessage: chatRoomData.lastMessage || user.lastMessage,
+                  lastMessageTime: chatRoomData.lastMessageTime ? chatRoomData.lastMessageTime.toDate() : user.lastMessageTime,
+                  time: chatRoomData.lastMessageTime ? 
+                    chatRoomData.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                    user.time
+                };
+              }
+              return user;
+            });
+
+            // Sort by last message time
+            return [...updatedUsers].sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+          });
+        });
+      });
+
+      // Return cleanup function
+      return () => {
+        unsubscribes.forEach(unsubscribe => unsubscribe());
+      };
+    });
+  };
   
 
   const fetchUsers = async (isRefresh = false) => {

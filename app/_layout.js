@@ -2,13 +2,15 @@ import { Tabs } from "expo-router";
 import "../global.css";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider } from "../context/AuthContext";
+import { NetworkProvider } from "../context/NetworkContext";
 import { Stack } from "expo-router";
 import { PaperProvider } from "react-native-paper";
 
 export default function AppLayout() {
   return (
     <AuthProvider>
-      <PaperProvider>
+      <NetworkProvider>
+        <PaperProvider>
         <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -23,7 +25,8 @@ export default function AppLayout() {
           }} 
         />
         </Stack>
-      </PaperProvider>
+        </PaperProvider>
+      </NetworkProvider>
     </AuthProvider>
   );
 }

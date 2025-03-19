@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useNetwork } from '../../context/NetworkContext';
 import LottieView from 'lottie-react-native';
 
 const MessageItem = ({ message, currentUserId }) => {
@@ -31,6 +32,7 @@ const MessageItem = ({ message, currentUserId }) => {
 export default function ChatDetail() {
   const { id: chatRoomId } = useLocalSearchParams();
   const { user } = useAuth();
+  const { isOnline, savePendingOperation } = useNetwork();
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('add');
@@ -161,7 +163,7 @@ export default function ChatDetail() {
       let messageData = {
         text: message,
         senderId: user.id,
-        timestamp: serverTimestamp(),
+        timestamp: new Date(),
       };
 
       if (amount) {
@@ -187,15 +189,46 @@ export default function ChatDetail() {
           ? currentUserBalance + amountNum 
           : currentUserBalance - amountNum;
         
-     
-        // Update both user balances in the chatroom
-        await updateDoc(chatRoomRef, {
-          [`balances.${user.id}`]: newUserBalance,
-        });
+        if (!isOnline) {
+          // Store transaction for later sync
+          await savePendingOperation({
+            type: 'transaction',
+            chatRoomId,
+            userId: user.id,
+            data: {
+              balance: newUserBalance
+            }
+          });
+        } else {
+          // Update both user balances in the chatroom
+          await updateDoc(chatRoomRef, {
+            [`balances.${user.id}`]: newUserBalance,
+          });
+        }
 
-        setBalance(newUserBalance );
+        setBalance(newUserBalance);
         setCurrentUserBalance(currentUserBalance);
         setPartnerBalance(partnerUserBalance);
+      }
+
+      if (!isOnline) {
+        // Store message for later sync
+        await savePendingOperation({
+          type: 'message',
+          chatRoomId,
+          data: messageData
+        });
+        // Add message to local state
+        const timestamp = new Date();
+        const newMessage = {
+          id: `local_${timestamp.getTime()}`,
+          ...messageData,
+          date: timestamp.toLocaleDateString(),
+          time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, newMessage]);
+      } else {
+        await addDoc(messagesRef, messageData);
       }
       
       // Add the message to the messages collection

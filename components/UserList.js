@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { getFirestore, collection, getDocs, query, where, orderBy, doc, updateDoc, getDoc, arrayUnion, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -196,6 +196,20 @@ export default function UserList() {
     );
   };
 
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchFriendsList();
+      // fetchUsers will be called automatically by the useEffect
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
     <View className="flex-1 bg-white">
       {/* Search Bar */}
@@ -237,6 +251,14 @@ export default function UserList() {
               onPress={() => handleUserPress(item.id)}
             />
           )}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#3b82f6']}
+              tintColor="#3b82f6"
+            />
+          }
           ListEmptyComponent={
             <View className="flex-1 justify-center items-center p-10">
               <Text className="text-gray-500 text-center">
