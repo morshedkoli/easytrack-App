@@ -291,7 +291,9 @@ export default function ChatDetail() {
           ),
           headerLeft: () => (
             <TouchableOpacity 
-              onPress={() => router.back()}
+              onPress={() => {
+                router.push('/(tabs)');
+              }}
               className="p-2"
             >
               <Ionicons name="arrow-back" size={24} color="#0084ff" />
@@ -319,14 +321,20 @@ export default function ChatDetail() {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <MessageItem message={item} currentUserId={user.id} />}
-            contentContainerStyle={{ paddingBottom: 10 }}
+            contentContainerStyle={{ paddingBottom: 10, flexGrow: 1, justifyContent: 'flex-end' }}
             inverted={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-            initialNumToRender={messages.length}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+            onScrollToIndexFailed={() => {
+              if (flatListRef.current) {
+                flatListRef.current.scrollToEnd({ animated: false });
+              }
+            }}
+            initialNumToRender={50}
+            maxToRenderPerBatch={25}
+            windowSize={21}
+            maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 100 }}
+            removeClippedSubviews={false}
           />
         )}
       </View>

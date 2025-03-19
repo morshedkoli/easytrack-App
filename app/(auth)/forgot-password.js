@@ -58,15 +58,15 @@ export default function ForgotPassword() {
         />
       </View>
       
-      <Text className="text-3xl font-bold mb-6 text-center">Reset Password</Text>
+      <Text className="text-3xl font-bold mb-6 text-center text-gray-800">Reset Password</Text>
       
-      {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
-      {successMessage ? <Text className="text-green-500 mb-4 text-center">{successMessage}</Text> : null}
+      {error ? <Text className="text-red-500 mb-4 text-center font-medium">{error}</Text> : null}
+      {successMessage ? <Text className="text-green-500 mb-4 text-center font-medium">{successMessage}</Text> : null}
       
       <View className="mb-6">
-        <Text className="text-gray-700 mb-2">Email</Text>
+        <Text className="text-gray-700 mb-2 font-medium">Email</Text>
         <TextInput
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+          className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 font-medium"
           placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
@@ -88,8 +88,8 @@ export default function ForgotPassword() {
       </TouchableOpacity>
       
       <View className="flex-row justify-center">
-        <Text className="text-gray-600">Remember your password? </Text>
-        <Link href="/(auth)/sign-in" className="text-blue-500 font-semibold">
+        <Text className="text-gray-700 font-medium">Remember your password? </Text>
+        <Link href="/(auth)/sign-in" className="text-blue-600 font-semibold hover:text-blue-700">
           Sign In
         </Link>
       </View>

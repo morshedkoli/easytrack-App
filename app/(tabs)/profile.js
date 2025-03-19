@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView, Alert, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { Surface, Avatar, TextInput, Button, IconButton, Text, ActivityIndicator, useTheme, Card, Divider } from 'react-native-paper';
+import { Surface, Text, TextInput, Button, Avatar, IconButton, ActivityIndicator, Card } from 'react-native-paper';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -224,11 +224,11 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-      <Surface style={{ elevation: 4, backgroundColor: '#1976D2', padding: 24, alignItems: 'center', position: 'relative' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <Surface style={{ backgroundColor: '#ffffff', padding: 24, alignItems: 'center', elevation: 2, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
         <IconButton
           icon="logout"
-          mode="contained-tonal"
+          iconColor="#64748b"
           size={24}
           style={{ position: 'absolute', top: 8, right: 8 }}
           onPress={() => {
@@ -242,104 +242,89 @@ export default function Profile() {
             );
           }}
         />
-        
         <Avatar.Image
-          size={120}
+          size={96}
           source={profileImage ? { uri: profileImage } : require('../../assets/images/default-avatar.png')}
-          style={{ backgroundColor: '#64B5F6', marginBottom: 16 }}
+          style={{ backgroundColor: '#e2e8f0', marginBottom: 16 }}
         />
-        
         {uploadingImage && (
           <ActivityIndicator
-            style={{ position: 'absolute', top: 72 }}
-            size="large"
-            color="#fff"
+            animating={true}
+            color="#64748b"
+            style={{ position: 'absolute', top: 60 }}
           />
         )}
-        
         <IconButton
           icon="camera"
-          mode="contained"
+          iconColor="#ffffff"
           size={24}
-          style={{ position: 'absolute', bottom: 80, right: '35%', backgroundColor: '#2196F3' }}
+          style={{ position: 'absolute', bottom: 70, right: '35%', backgroundColor: '#3b82f6' }}
           onPress={pickImage}
           disabled={uploadingImage}
         />
-        
-        <Text variant="headlineSmall" style={{ color: '#fff', marginBottom: 4 }}>
+        <Text variant="headlineSmall" style={{ color: '#1e293b', marginBottom: 4 }}>
           {name || user?.email?.split('@')[0] || 'User'}
         </Text>
-        <Text variant="bodyMedium" style={{ color: '#E3F2FD' }}>{user?.email}</Text>
+        <Text variant="bodyMedium" style={{ color: '#64748b' }}>{user?.email}</Text>
       </Surface>
       
-      <View style={{ padding: 16 }}>
-        <Card style={{ marginBottom: 16 }}>
+      <View style={{ padding: 16, backgroundColor: 'white' }}>
+        <Card style={{ marginBottom: 16, elevation: 1, backgroundColor: '#ffffff', borderRadius: 12 }}>
           <Card.Content>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text variant="titleLarge">Personal Information</Text>
+              <Text variant="titleLarge" style={{ color: '#1e293b' }}>Personal Information</Text>
               {!isEditing && (
                 <IconButton
                   icon="pencil"
                   mode="contained"
+                  containerColor="#3b82f6"
+                  iconColor="white"
                   size={20}
                   onPress={() => setIsEditing(true)}
                 />
               )}
             </View>
             
-            <Divider style={{ marginBottom: 16 }} />
-            
             <TextInput
               label="Name"
               value={name}
               onChangeText={setName}
-              mode="outlined"
               disabled={!isEditing}
-              style={{ marginBottom: 16 }}
-              placeholder="Enter your name"
-            />
-            
-            <TextInput
-              label="Email"
-              value={user?.email}
               mode="outlined"
-              disabled
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16, backgroundColor: '#ffffff' }}
+              outlineColor="#e2e8f0"
+              activeOutlineColor="#3b82f6"
+              textColor="#1e293b"
             />
-            
             <TextInput
               label="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
-              mode="outlined"
               disabled={!isEditing}
-              style={{ marginBottom: 16 }}
-              placeholder="Enter your phone number"
-              keyboardType="phone-pad"
+              mode="outlined"
+              style={{ marginBottom: 16, backgroundColor: '#ffffff' }}
+              outlineColor="#e2e8f0"
+              activeOutlineColor="#3b82f6"
+              textColor="#1e293b"
             />
-            
             {isEditing && (
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
                 <Button
                   mode="outlined"
                   onPress={() => {
                     setIsEditing(false);
-                    if (profileExists) {
-                      checkUserProfile();
-                    } else {
-                      setName('');
-                      setPhoneNumber('');
-                    }
+                    checkUserProfile();
                   }}
+                  textColor="#64748b"
+                  style={{ borderColor: '#e2e8f0' }}
                 >
                   Cancel
                 </Button>
-                
                 <Button
                   mode="contained"
                   onPress={saveProfile}
                   loading={loading}
-                  disabled={loading}
+                  buttonColor="#3b82f6"
                 >
                   Save
                 </Button>

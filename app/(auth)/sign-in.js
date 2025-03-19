@@ -30,7 +30,7 @@ export default function SignIn() {
   };
 
   return (
-    <View className="flex-1 bg-white p-6 justify-center">
+    <View className="flex-1 bg-gradient-to-b from-blue-50 to-white p-6 justify-center">
       {/* REMOVED Stack.Screen declaration */}
       {/* Lottie Animation */}
       <View className="items-center mb-4">
@@ -42,14 +42,14 @@ export default function SignIn() {
         />
       </View>
       
-      <Text variant="displaySmall" style={{ marginBottom: 16, textAlign: 'center' }}>Sign In</Text>
+      <Text variant="displaySmall" style={{ marginBottom: 16, textAlign: 'center', color: '#1a365d', fontWeight: '600' }}>Sign In</Text>
 
       {/* Error Message */}
-      {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
-      
+      {error ? <Text className="text-red-500 mb-4 text-center font-medium">{error}</Text> : null}
+
       {/* Email Input */}
       <View className="mb-4">
-        <Text className="text-gray-700 mb-2">Email</Text>
+        <Text className="text-gray-700 mb-2 font-medium">Email</Text>
         <TextInput
           mode="outlined"
           label="Email"
@@ -58,13 +58,14 @@ export default function SignIn() {
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+          theme={{ colors: { primary: '#3b82f6' } }}
         />
       </View>
       
       {/* Password Input */}
       <View className="mb-6">
-        <Text className="text-gray-700 mb-2">Password</Text>
+        <Text className="text-gray-700 mb-2 font-medium">Password</Text>
         <TextInput
           mode="outlined"
           label="Password"
@@ -72,10 +73,11 @@ export default function SignIn() {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+          theme={{ colors: { primary: '#3b82f6' } }}
         />
         <TouchableOpacity className="mt-2 self-end">
-          <Link href="/(auth)/forgot-password" className="text-blue-500 text-sm">
+          <Link href="/(auth)/forgot-password" className="text-blue-600 font-medium hover:text-blue-700">
             Forgot Password?
           </Link>
         </TouchableOpacity>
@@ -86,16 +88,17 @@ export default function SignIn() {
         mode="contained" 
         onPress={handleSignIn}
         disabled={isLoading}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16, backgroundColor: '#3b82f6' }}
         contentStyle={{ paddingVertical: 8 }}
+        labelStyle={{ fontSize: 16, fontWeight: '600' }}
       >
         {isLoading ? <ActivityIndicator color="white" /> : 'Sign In'}
       </Button>
       
       {/* Sign Up Link */}
       <View className="flex-row justify-center">
-        <Text className="text-gray-600">Don't have an account? </Text>
-        <Link href="/(auth)/sign-up" className="text-blue-500 font-semibold">
+        <Text className="text-gray-700">Don't have an account? </Text>
+        <Link href="/(auth)/sign-up" className="text-blue-600 font-semibold hover:text-blue-700">
           Sign Up
         </Link>
       </View>

@@ -1,29 +1,37 @@
-import { View } from "react-native";
+import { View, Text, ActivityIndicator, ScrollView } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import ChatList from "../../components/ChatList";
 import BalanceCard from "../../components/BalanceCard";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
-import { Appbar, Surface, useTheme } from "react-native-paper";
 
 export default function Home() {
-  const theme = useTheme();
 
   return (
-    <Surface className="flex-1">
+    <View className="flex-1 bg-white pt-safe">
       <Stack.Screen 
         options={{
-          header: () => (
-            <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
-              <Appbar.Action icon="menu" onPress={() => {}} />
-              <Appbar.Content title="Easy Track" titleStyle={{ fontWeight: 'bold', fontSize: 24 }} />
-              <Appbar.Action icon="bell" onPress={() => {}} />
-            </Appbar.Header>
-          )
+          headerTitle: "Easy Track",
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 24,
+          },
+          headerStyle: {
+            backgroundColor: '#3b82f6',
+          },
+          headerTintColor: '#fff',
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <Ionicons name="menu-outline" size={28} color="#fff" style={{ marginLeft: 10 }} />
+          ),
+          headerRight: () => (
+            <Ionicons name="notifications-outline" size={24} color="#fff" style={{ marginRight: 10 }} />
+          ),
         }}
       />
       <BalanceCard />
+
       <ChatList />
-    </Surface>
+    </View>
   );
 }
