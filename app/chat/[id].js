@@ -6,7 +6,7 @@ import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapsh
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import LottieView from 'lottie-react-native';
-import { sendPushNotification } from '../../services/NotificationService';
+import { sendFCMNotification } from '../../services/FCMService';
 
 const MessageItem = ({ message, currentUserId }) => {
   const isMe = message.senderId === currentUserId;
@@ -64,8 +64,25 @@ export default function ChatDetail() {
       const chatRoomDoc = await getDoc(doc(db, 'chatRooms', chatRoomId));
       
       if (!chatRoomDoc.exists()) {
-        console.error('Chat room not found');
-        return;
+        // Initialize chat room with zero balances for both participants
+        const [user1, user2] = chatRoomId.split('_');
+        await setDoc(doc(db, 'chatRooms', chatRoomId), {
+          participants: [user1, user2],
+          balances: {
+            [user1]: 0,
+            [user2]: 0
+          },
+          createdAt: serverTimestamp(),
+          lastMessage: 'Chat room created',
+          lastMessageTime: serverTimestamp()
+        });
+        // Fetch the newly created chat room
+        const newChatRoomDoc = await getDoc(doc(db, 'chatRooms', chatRoomId));
+        if (!newChatRoomDoc.exists()) {
+          console.error('Failed to create chat room');
+          return;
+        }
+        chatRoomDoc = newChatRoomDoc;
       }
 
       
@@ -232,9 +249,6 @@ export default function ChatDetail() {
         await addDoc(messagesRef, messageData);
       }
       
-      // Add the message to the messages collection
-      await addDoc(messagesRef, messageData);
-      
       // Update the chatRoom document with the last message and timestamp
       const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
       await updateDoc(chatRoomRef, {
@@ -242,14 +256,14 @@ export default function ChatDetail() {
         lastMessageTime: serverTimestamp()
       });
 
-      // Send push notification to chat partner
+      // Send FCM notification to chat partner
       const partnerDoc = await getDoc(doc(db, 'users', chatPartner.id));
       if (partnerDoc.exists()) {
         const partnerData = partnerDoc.data();
-        if (partnerData.expoPushToken) {
+        if (partnerData.fcmToken) {
           const notificationMessage = message.trim() || 'New transaction';
           const amountValue = amount ? (transactionType === 'add' ? parseFloat(amount) : -parseFloat(amount)) : null;
-          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
+          await sendFCMNotification(partnerData.fcmToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
         }
       }
       

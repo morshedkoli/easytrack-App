@@ -259,9 +259,15 @@ export default function Profile() {
         />
         <Avatar.Image
           size={96}
-          source={profileImage ? { uri: profileImage } : require('../../assets/images/default-avatar.png')}
+          source={profileImage ? { uri: profileImage } : undefined}
           style={{ backgroundColor: '#e2e8f0', marginBottom: 16 }}
-        />
+        >
+          {!profileImage && (
+            <Text style={{ color: '#64748b', fontSize: 32 }}>
+              {(name || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
+            </Text>
+          )}
+        </Avatar.Image>
         {uploadingImage && (
           <ActivityIndicator
             animating={true}
