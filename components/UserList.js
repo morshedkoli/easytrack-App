@@ -108,51 +108,47 @@ export default function UserList() {
     }
   };
 
-  const handleUserPress = (userId) => {
-    // Navigate to user profile or start a chat
-    router.push(`/chat/${user.id}_${userId}`);
-  };
-  
-  const handleAddFriend = async (userId, userName) => {
-    if (addingFriend) return;
-    
+  const handleUserPress = async (userId, userName) => {
     try {
-      setAddingFriend(true);
+      // Add user to friends list
+      await handleAddFriend(userId, userName);
       
-      // Check if already a friend
-      if (friendsList.includes(userId)) {
-        Alert.alert('Already Friends', `${userName} is already in your friends list.`);
-        return;
+      // Create a unique chat room ID by combining both user IDs (sorted to ensure consistency)
+      const participants = [user.id, userId].sort();
+      const chatRoomId = participants.join('_');
+      
+      // Check if the chat room exists
+      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+      const chatRoomDoc = await getDoc(chatRoomRef);
+      
+      if (!chatRoomDoc.exists()) {
+        // Create a new chat room if it doesn't exist
+        await setDoc(chatRoomRef, {
+          participants,
+          balances: {
+            [user.id]: 0,
+            [userId]: 0
+          },
+          createdAt: serverTimestamp(),
+          lastMessage: 'Chat room created',
+          lastMessageTime: serverTimestamp()
+        });
       }
       
-      // Update current user's friends list in Firestore
-      const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, {
-        friends: arrayUnion(userId)
-      });
-      
-      // Update local state
-      const updatedFriendsList = [...friendsList, userId];
-      setFriendsList(updatedFriendsList);
-      
-      // No need to manually update users list here as the useEffect will trigger fetchUsers
-      
-      Alert.alert('Friend Added', `${userName} has been added to your friends list.`);
+      // Navigate to chat detail screen with the chat room ID
+      router.push(`/chat/${chatRoomId}`);
     } catch (error) {
-      console.error('Error adding friend:', error);
-      Alert.alert('Error', 'Failed to add friend. Please try again.');
-    } finally {
-      setAddingFriend(false);
+      console.error('Error handling user press:', error);
+      Alert.alert('Error', 'Failed to initialize chat. Please try again.');
     }
   };
 
   const UserItem = ({ item, onPress }) => {
     return (
-      <View className="flex-row items-center p-3 border-b border-gray-100">
-        <TouchableOpacity 
-          className="flex-1 flex-row items-center"
-          onPress={onPress}
-        >
+      <TouchableOpacity 
+        className="flex-row items-center p-3 border-b border-gray-100"
+        onPress={() => onPress(item.id, item.name)}
+      >
         {item.avatar ? (
           <Image 
             source={{ uri: item.avatar }} 
@@ -178,22 +174,66 @@ export default function UserList() {
             </Text>
           )}
         </View>
-        </TouchableOpacity>
-        
-        {/* Add Friend Button */}
-        <TouchableOpacity 
-          className={`ml-2 p-2 rounded-full ${item.isFriend ? 'bg-gray-200' : 'bg-green-500'}`}
-          onPress={() => handleAddFriend(item.id, item.name)}
-          disabled={item.isFriend || addingFriend}
-        >
-          <Ionicons 
-            name={item.isFriend ? "checkmark" : "add"} 
-            size={20} 
-            color={item.isFriend ? "#666" : "#fff"} 
-          />
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     );
+  };
+
+  const handleAddFriend = async (userId, userName) => {
+    if (addingFriend) return;
+    
+    try {
+      setAddingFriend(true);
+      
+      // Check if already a friend
+      if (friendsList.includes(userId)) {
+        Alert.alert('Already Friends', `${userName} is already in your friends list.`);
+        return;
+      }
+      
+      // Update current user's friends list in Firestore
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        friends: arrayUnion(userId)
+      });
+
+      // Update the other user's friends list
+      const otherUserRef = doc(db, 'users', userId);
+      await updateDoc(otherUserRef, {
+        friends: arrayUnion(user.id)
+      });
+      
+      // Create or initialize chat room
+      const participants = [user.id, userId].sort();
+      const chatRoomId = participants.join('_');
+      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+      const chatRoomDoc = await getDoc(chatRoomRef);
+      
+      if (!chatRoomDoc.exists()) {
+        await setDoc(chatRoomRef, {
+          participants: participants,
+          balances: {
+            [user.id]: 0,
+            [userId]: 0
+          },
+          createdAt: serverTimestamp(),
+          lastMessage: 'Chat room created',
+          lastMessageTime: serverTimestamp()
+        });
+      }
+      
+      // Update local state
+      const updatedFriendsList = [...friendsList, userId];
+      setFriendsList(updatedFriendsList);
+      
+      // No need to manually update users list here as the useEffect will trigger fetchUsers
+      
+      // Alert.alert('Friend Added', `${userName} has been added to your friends list.`);
+    } catch (error) {
+      console.error('Error adding friend:', error);
+      Alert.alert('Error', 'Failed to add friend. Please try again.');
+    } finally {
+      setAddingFriend(false);
+    }
   };
 
   const [refreshing, setRefreshing] = useState(false);

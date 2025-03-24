@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import ProfileModal from '../../components/ProfileModal';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import LottieView from 'lottie-react-native';
-import { sendFCMNotification } from '../../services/FCMService';
+import { sendPushNotification } from '../../services/NotificationService';
 
 const MessageItem = ({ message, currentUserId }) => {
   const isMe = message.senderId === currentUserId;
@@ -44,6 +45,7 @@ export default function ChatDetail() {
   const [partnerBalance, setPartnerBalance] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [currentUserBalance, setCurrentUserBalance] = useState(0);
+  const [showProfile, setShowProfile] = useState(false);
   
   // Add a ref for the FlatList to control scrolling
   const flatListRef = useRef(null);
@@ -256,14 +258,14 @@ export default function ChatDetail() {
         lastMessageTime: serverTimestamp()
       });
 
-      // Send FCM notification to chat partner
+      // Send Expo notification to chat partner
       const partnerDoc = await getDoc(doc(db, 'users', chatPartner.id));
       if (partnerDoc.exists()) {
         const partnerData = partnerDoc.data();
-        if (partnerData.fcmToken) {
+        if (partnerData.expoPushToken) {
           const notificationMessage = message.trim() || 'New transaction';
           const amountValue = amount ? (transactionType === 'add' ? parseFloat(amount) : -parseFloat(amount)) : null;
-          await sendFCMNotification(partnerData.fcmToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
+          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
         }
       }
       
@@ -328,6 +330,14 @@ export default function ChatDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
+      <ProfileModal 
+        isVisible={showProfile} 
+        onClose={() => setShowProfile(false)} 
+        user={{
+          ...chatPartner,
+          netBalance: currentUserBalance - partnerBalance
+        }} 
+      />
       <Stack.Screen 
         options={{
           headerTitle: () => (
@@ -351,11 +361,38 @@ export default function ChatDetail() {
           headerLeft: () => (
             <TouchableOpacity 
               onPress={() => {
-                router.push('/(tabs)');
+                // Clean up subscriptions and state before navigation
+                if (flatListRef.current) {
+                  flatListRef.current = null;
+                }
+                setMessages([]);
+                setLoading(false);
+                setIsSending(false);
+                router.back();
               }}
               className="p-2"
             >
               <Ionicons name="arrow-back" size={24} color="#0084ff" />
+            </TouchableOpacity>
+          ),
+          headerTitle: () => (
+            <TouchableOpacity onPress={() => setShowProfile(true)}>
+              <View className="flex-row items-center">
+                {chatPartner.avatar ? (
+                  <Image 
+                    source={{ uri: chatPartner.avatar }} 
+                    className="w-10 h-10 rounded-full mr-2"
+                  />
+                ) : (
+                  <View className="w-10 h-10 rounded-full bg-gray-300 items-center justify-center mr-2">
+                    <Ionicons name="person" size={18} color="#fff" />
+                  </View>
+                )}
+                <View>
+                  <Text className="font-semibold text-lg">{chatPartner.name}</Text>
+                  <Text className="text-xs text-gray-500">{chatPartner.status}</Text>
+                </View>
+              </View>
             </TouchableOpacity>
           ),
           headerRight: () => (

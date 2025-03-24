@@ -9,7 +9,18 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, user } = useAuth();
+
+  if (user) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <View>
+         
+          <ActivityIndicator size="large" color="green" />
+        </View>
+      </View>
+    );
+  }
 
   const handleSignIn = async () => {
     if (!email || !password) {

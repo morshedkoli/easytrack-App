@@ -8,6 +8,13 @@
     "scheme": "chat-trans",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#ffffff",
+      "androidMode": "default",
+      "androidCollapsedTitle": "New Message",
+      "iosDisplayInForeground": true
+    },
     "ios": {
       "supportsTablet": true
     },

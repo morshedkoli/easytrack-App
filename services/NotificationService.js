@@ -1,6 +1,26 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import Constants from 'expo-constants';
+
+// Configure notification behavior for handling both foreground and background notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+// Configure notification channel for Android
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF231F7C',
+  });
+}
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
@@ -12,6 +32,16 @@ Notifications.setNotificationHandler({
 });
 
 export const registerForPushNotificationsAsync = async (userId) => {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
   try {
     // Check if we have permission
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -29,7 +59,10 @@ export const registerForPushNotificationsAsync = async (userId) => {
     }
 
     // Get the token that uniquely identifies this device
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
+    const experienceId = Constants.expoConfig?.extra?.eas?.projectId;
+    token = (await Notifications.getExpoPushTokenAsync({
+      projectId: experienceId,
+    })).data;
 
     // Save the token to Firestore
     const db = getFirestore();
@@ -81,8 +114,13 @@ export const unregisterForNotificationsAsync = async (userId) => {
   }
 };
 
-export const sendPushNotification = async (expoPushToken, senderName, message, amount = null) => {
+export const sendPushNotification = async (expoPushToken, senderName, message, amount = null, chatRoomId = null) => {
   try {
+    if (!expoPushToken) {
+      console.log('No push token found');
+      return;
+    }
+
     let notificationBody = message;
     if (amount) {
       const amountText = amount > 0 ? `+৳${amount}` : `-৳${Math.abs(amount)}`;
@@ -94,7 +132,16 @@ export const sendPushNotification = async (expoPushToken, senderName, message, a
       sound: 'default',
       title: senderName,
       body: notificationBody,
-      data: { message, amount },
+      data: { 
+        message,
+        amount,
+        chatRoomId,
+        type: 'chat_message',
+        senderName
+      },
+      priority: 'high',
+      badge: 1,
+      channelId: 'default'
     };
 
     await fetch('https://exp.host/--/api/v2/push/send', {
