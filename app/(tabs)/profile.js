@@ -240,10 +240,11 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gradient-to-b from-action/90 to-secondary/90">
-      <View className="items-center p-6 pb-8">
+    <ScrollView className="flex-1 bg-background dark:bg-background-dark">
+      <View className="items-center p-6 pb-8 bg-primary dark:bg-primary-dark">
         <View className="relative mb-4">
           <Avatar.Image
+            className="bg-background dark:bg-background-dark border-action"
             size={120}
             source={profileImage ? { uri: profileImage } : undefined}
             style={{
@@ -313,84 +314,103 @@ export default function Profile() {
         </TouchableOpacity>
       </View>
       
-      <View className="flex-1 bg-surface dark:bg-surface-dark rounded-t-3xl px-4 pt-6">
-        <View className="mb-6">
-          <View className="flex-row items-center mb-4">
-            <Ionicons name="person-circle-outline" size={24} color="#4f46e5" />
-            <Text className="text-xl font-bold ml-2 text-text-primary dark:text-text-primary-dark">Account Info</Text>
-            {!isEditing && (
-              <IconButton
-                icon="pencil-outline"
-                iconColor="#4f46e5"
-                size={20}
-                style={{ marginLeft: 'auto' }}
-                onPress={() => setIsEditing(true)}
-              />
-            )}
-          </View>
-          
-          <View className="space-y-4">
-            <View className="flex-row items-center bg-background/50 dark:bg-background-dark/50 p-4 rounded-xl">
-              <Ionicons name="person-outline" size={20} color="#64748b" />
+      <View className="flex-1 bg-surface dark:bg-surface-dark rounded-3xl px-4 p-6 min-h-[200px]">
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className="text-text-primary dark:text-text-primary-dark text-xl font-bold ml-2">Account Info</Text>
+          {!isEditing && (
+            <IconButton
+              icon="pencil"
+              size={18}
+              iconColor="#64748b"
+              className="dark:bg-surface-container-dark"
+              onPress={() => setIsEditing(true)}
+            />
+          )}
+        </View>
+        <View className="flex-row items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark justify-between">
+          <View className="flex-row items-center flex-1">
+            <Ionicons name="person-outline" size={20} color="#64748b" className="dark:text-text-primary-dark" />
+            {isEditing ? (
               <TextInput
                 label="Name"
                 value={name}
                 onChangeText={setName}
-                disabled={!isEditing}
                 mode="flat"
                 className="flex-1 ml-3"
                 underlineColor="transparent"
                 activeUnderlineColor="#4f46e5"
-                textColor="#0f172a"
+                textColor="text-primary dark:text-primary-dark"
                 style={{ backgroundColor: 'transparent' }}
               />
-            </View>
-            <View className="flex-row items-center bg-background/50 dark:bg-background-dark/50 p-4 rounded-xl">
-              <Ionicons name="call-outline" size={20} color="#64748b" />
+            ) : (
+              <Text className="flex-1 ml-3 text-primary dark:text-primary-dark">
+                {name || 'Not provided'}
+              </Text>
+            )}
+          </View>
+        </View>
+        <View className="flex-row items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark mt-4 justify-between">
+          <View className="flex-row items-center flex-1">
+            <Ionicons name="call-outline" size={20} color="#64748b" className="dark:text-text-primary-dark" />
+            {isEditing ? (
               <TextInput
                 label="Phone Number"
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
-                disabled={!isEditing}
                 mode="flat"
                 className="flex-1 ml-3"
                 underlineColor="transparent"
                 activeUnderlineColor="#4f46e5"
-                textColor="#0f172a"
+                textColor="text-primary dark:text-primary-dark"
                 style={{ backgroundColor: 'transparent' }}
               />
-            </View>
+            ) : (
+              <Text className="flex-1 ml-3 text-primary dark:text-primary-dark">
+                {phoneNumber || 'Not provided'}
+              </Text>
+            )}
           </View>
-          
-          {isEditing && (
-            <View className="flex-row justify-end gap-3 mt-6">
-              <Button
-                mode="outlined"
-                onPress={() => {
-                  setIsEditing(false);
-                  checkUserProfile();
-                }}
-                textColor="#64748b"
-                style={{
-                  borderColor: '#e2e8f0',
-                  borderRadius: 8
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                mode="contained"
-                onPress={saveProfile}
-                loading={loading}
-                buttonColor="#4f46e5"
-                style={{ borderRadius: 8 }}
-              >
-                Save
-              </Button>
-            </View>
-          )}
         </View>
       </View>
+      
+      {isEditing ? (
+        <View className="flex-row justify-end gap-3 mt-6">
+          <Button
+            mode="outlined"
+            onPress={() => {
+              setIsEditing(false);
+              checkUserProfile();
+            }}
+            textColor="#64748b"
+            style={{
+              borderColor: '#e2e8f0',
+              borderRadius: 8
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            mode="contained"
+            onPress={saveProfile}
+            loading={loading}
+            buttonColor="#4f46e5"
+            style={{ borderRadius: 8 }}
+          >
+            Save
+          </Button>
+        </View>
+      ) : (
+        <View className="flex-row justify-end mt-6">
+          {/* <Button
+            mode="contained"
+            onPress={() => setIsEditing(true)}
+            buttonColor="#4f46e5"
+            style={{ borderRadius: 8 }}
+          >
+            Edit
+          </Button> */}
+        </View>
+      )}
     </ScrollView>
   );
 }
