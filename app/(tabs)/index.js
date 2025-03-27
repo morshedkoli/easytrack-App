@@ -8,7 +8,7 @@ import { Stack } from "expo-router";
 export default function Home() {
 
   return (
-    <View className="flex-1 bg-white pt-safe">
+    <View className="flex-1 bg-surface dark:bg-surface-dark pt-safe">
       <Stack.Screen 
         options={{
           headerTitle: "Easy Track",
@@ -17,7 +17,7 @@ export default function Home() {
             fontSize: 24,
           },
           headerStyle: {
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#4f46e5',
           },
           headerTintColor: '#fff',
           headerShadowVisible: false,

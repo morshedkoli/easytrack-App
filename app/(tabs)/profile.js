@@ -8,6 +8,7 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { Surface, Text, TextInput, Button, Avatar, IconButton, ActivityIndicator, Card } from 'react-native-paper';
+import { TouchableOpacity } from 'react-native';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -239,13 +240,63 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <Surface style={{ backgroundColor: '#ffffff', padding: 24, alignItems: 'center', elevation: 2, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
-        <IconButton
-          icon="logout"
-          iconColor="#64748b"
-          size={24}
-          style={{ position: 'absolute', top: 8, right: 8 }}
+    <ScrollView className="flex-1 bg-gradient-to-b from-action/90 to-secondary/90">
+      <View className="items-center p-6 pb-8">
+        <View className="relative mb-4">
+          <Avatar.Image
+            size={120}
+            source={profileImage ? { uri: profileImage } : undefined}
+            style={{
+              backgroundColor: '#e2e8f0',
+              borderWidth: 4,
+              borderColor: 'rgba(255,255,255,0.3)',
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 5
+            }}
+          >
+            {!profileImage && (
+              <Text style={{ color: '#64748b', fontSize: 32 }}>
+                {(name || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
+              </Text>
+            )}
+          </Avatar.Image>
+          {uploadingImage && (
+            <ActivityIndicator
+              animating={true}
+              color="#ffffff"
+              style={{ position: 'absolute', top: '50%', left: '50%', marginLeft: -12, marginTop: -12 }}
+            />
+          )}
+          <IconButton
+            icon="camera"
+            iconColor="#ffffff"
+            size={24}
+            style={{
+              position: 'absolute',
+              bottom: -6,
+              right: -6,
+              backgroundColor: '#4f46e5',
+              borderWidth: 3,
+              borderColor: '#ffffff',
+              elevation: 4,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84
+            }}
+            onPress={pickImage}
+            disabled={uploadingImage}
+          />
+        </View>
+        <Text className="text-2xl font-bold text-white mb-1">
+          @{name || user?.email?.split('@')[0] || 'user'}
+        </Text>
+        <Text className="text-white/80 text-base">{user?.email}</Text>
+        <TouchableOpacity
+          className="mt-4 bg-red-500/20 hover:bg-red-500/30 px-6 py-2 rounded-full flex-row items-center"
           onPress={() => {
             Alert.alert(
               'Sign Out',
@@ -256,103 +307,89 @@ export default function Profile() {
               ]
             );
           }}
-        />
-        <Avatar.Image
-          size={96}
-          source={profileImage ? { uri: profileImage } : undefined}
-          style={{ backgroundColor: '#e2e8f0', marginBottom: 16 }}
         >
-          {!profileImage && (
-            <Text style={{ color: '#64748b', fontSize: 32 }}>
-              {(name || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
-            </Text>
-          )}
-        </Avatar.Image>
-        {uploadingImage && (
-          <ActivityIndicator
-            animating={true}
-            color="#64748b"
-            style={{ position: 'absolute', top: 60 }}
-          />
-        )}
-        <IconButton
-          icon="camera"
-          iconColor="#ffffff"
-          size={24}
-          style={{ position: 'absolute', bottom: 70, right: '35%', backgroundColor: '#3b82f6' }}
-          onPress={pickImage}
-          disabled={uploadingImage}
-        />
-        <Text variant="headlineSmall" style={{ color: '#1e293b', marginBottom: 4 }}>
-          {name || user?.email?.split('@')[0] || 'User'}
-        </Text>
-        <Text variant="bodyMedium" style={{ color: '#64748b' }}>{user?.email}</Text>
-      </Surface>
+          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+          <Text className="text-red-500 ml-2 font-medium">Sign Out</Text>
+        </TouchableOpacity>
+      </View>
       
-      <View style={{ padding: 16, backgroundColor: 'white' }}>
-        <Card style={{ marginBottom: 16, elevation: 1, backgroundColor: '#ffffff', borderRadius: 12 }}>
-          <Card.Content>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text variant="titleLarge" style={{ color: '#1e293b' }}>Personal Information</Text>
-              {!isEditing && (
-                <IconButton
-                  icon="pencil"
-                  mode="contained"
-                  containerColor="#3b82f6"
-                  iconColor="white"
-                  size={20}
-                  onPress={() => setIsEditing(true)}
-                />
-              )}
-            </View>
-            
-            <TextInput
-              label="Name"
-              value={name}
-              onChangeText={setName}
-              disabled={!isEditing}
-              mode="outlined"
-              style={{ marginBottom: 16, backgroundColor: '#ffffff' }}
-              outlineColor="#e2e8f0"
-              activeOutlineColor="#3b82f6"
-              textColor="#1e293b"
-            />
-            <TextInput
-              label="Phone Number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              disabled={!isEditing}
-              mode="outlined"
-              style={{ marginBottom: 16, backgroundColor: '#ffffff' }}
-              outlineColor="#e2e8f0"
-              activeOutlineColor="#3b82f6"
-              textColor="#1e293b"
-            />
-            {isEditing && (
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
-                <Button
-                  mode="outlined"
-                  onPress={() => {
-                    setIsEditing(false);
-                    checkUserProfile();
-                  }}
-                  textColor="#64748b"
-                  style={{ borderColor: '#e2e8f0' }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={saveProfile}
-                  loading={loading}
-                  buttonColor="#3b82f6"
-                >
-                  Save
-                </Button>
-              </View>
+      <View className="flex-1 bg-surface dark:bg-surface-dark rounded-t-3xl px-4 pt-6">
+        <View className="mb-6">
+          <View className="flex-row items-center mb-4">
+            <Ionicons name="person-circle-outline" size={24} color="#4f46e5" />
+            <Text className="text-xl font-bold ml-2 text-text-primary dark:text-text-primary-dark">Account Info</Text>
+            {!isEditing && (
+              <IconButton
+                icon="pencil-outline"
+                iconColor="#4f46e5"
+                size={20}
+                style={{ marginLeft: 'auto' }}
+                onPress={() => setIsEditing(true)}
+              />
             )}
-          </Card.Content>
-        </Card>
+          </View>
+          
+          <View className="space-y-4">
+            <View className="flex-row items-center bg-background/50 dark:bg-background-dark/50 p-4 rounded-xl">
+              <Ionicons name="person-outline" size={20} color="#64748b" />
+              <TextInput
+                label="Name"
+                value={name}
+                onChangeText={setName}
+                disabled={!isEditing}
+                mode="flat"
+                className="flex-1 ml-3"
+                underlineColor="transparent"
+                activeUnderlineColor="#4f46e5"
+                textColor="#0f172a"
+                style={{ backgroundColor: 'transparent' }}
+              />
+            </View>
+            <View className="flex-row items-center bg-background/50 dark:bg-background-dark/50 p-4 rounded-xl">
+              <Ionicons name="call-outline" size={20} color="#64748b" />
+              <TextInput
+                label="Phone Number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                disabled={!isEditing}
+                mode="flat"
+                className="flex-1 ml-3"
+                underlineColor="transparent"
+                activeUnderlineColor="#4f46e5"
+                textColor="#0f172a"
+                style={{ backgroundColor: 'transparent' }}
+              />
+            </View>
+          </View>
+          
+          {isEditing && (
+            <View className="flex-row justify-end gap-3 mt-6">
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setIsEditing(false);
+                  checkUserProfile();
+                }}
+                textColor="#64748b"
+                style={{
+                  borderColor: '#e2e8f0',
+                  borderRadius: 8
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                onPress={saveProfile}
+                loading={loading}
+                buttonColor="#4f46e5"
+                style={{ borderRadius: 8 }}
+              >
+                Save
+              </Button>
+            </View>
+          )}
+        </View>
       </View>
     </ScrollView>
   );

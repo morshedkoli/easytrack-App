@@ -15,17 +15,17 @@ const MessageItem = ({ message, currentUserId }) => {
   return (
     <View className={`flex-row ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
       <View 
-        className={`rounded-2xl p-3 max-w-[80%] ${isMe ? 'bg-green-100' : 'bg-white border border-gray-200'}`}
+        className={`rounded-2xl p-3 max-w-[80%] ${isMe ? 'bg-secondary/20 dark:bg-secondary/30' : 'bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-700'}`}
       >
         {message.amount && (
-          <View className={`mb-2 p-2 rounded ${message.transactionType === 'add' ? 'bg-green-100' : 'bg-red-100'}`}>
-            <Text className={`text-base font-bold ${message.transactionType === 'add' ? 'text-green-600' : 'text-red-600'}`}>
+          <View className={`mb-2 p-2 rounded ${message.transactionType === 'add' ? 'bg-success/20 dark:bg-success/30' : 'bg-warning/20 dark:bg-warning/30'}`}>
+            <Text className={`text-base font-bold ${message.transactionType === 'add' ? 'text-success dark:text-success' : 'text-warning dark:text-warning'}`}>
               {message.transactionType === 'add' ? '+' : '-'} ৳{parseFloat(message.amount).toFixed(2)}
             </Text>
           </View>
         )}
-        <Text className="text-gray-800 text-base">{message.text}</Text>
-        <Text className="text-xs text-gray-500 text-right mt-1">{message.date} {message.time}</Text>
+        <Text className="text-text-primary dark:text-text-primary-dark text-base">{message.text}</Text>
+        <Text className="text-xs text-text-secondary dark:text-text-secondary-dark text-right mt-1">{message.date} {message.time}</Text>
       </View>
     </View>
   );
@@ -406,7 +406,7 @@ export default function ChatDetail() {
         }}
       />
       
-      <View className="flex-1 bg-gray-50 p-3">
+      <View className="flex-1 bg-background dark:bg-background-dark p-3">
         {messages.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Text className="text-gray-500">No messages yet. Start the conversation!</Text>
@@ -417,42 +417,40 @@ export default function ChatDetail() {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <MessageItem message={item} currentUserId={user.id} />}
-            contentContainerStyle={{ paddingBottom: 10, flexGrow: 1, justifyContent: 'flex-end' }}
-            inverted={false}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-            onScrollToIndexFailed={() => {
-              if (flatListRef.current) {
-                flatListRef.current.scrollToEnd({ animated: false });
-              }
-            }}
+            contentContainerStyle={{ paddingVertical: 10, flexGrow: 1, justifyContent: 'flex-end' }}
             initialNumToRender={50}
             maxToRenderPerBatch={25}
             windowSize={21}
-            maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 100 }}
-            removeClippedSubviews={false}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: true})}
+            onLayout={() => flatListRef.current?.scrollToEnd({animated: true})}
+            inverted={false}
+            maintainVisibleContentPosition={{ 
+              minIndexForVisible: 0,
+              autoscrollToTopThreshold: 100 
+            }}
+            removeClippedSubviews={Platform.OS === 'android'}
           />
         )}
       </View>
       
-      <View className="bg-white p-3 border-t border-gray-200">
+      <View className="bg-surface dark:bg-surface-dark p-3 border-t border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center mb-3">
-          <View className="flex-row items-center bg-gray-100 rounded-lg p-2">
+          <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg p-2">
             <TouchableOpacity 
               onPress={() => setTransactionType('add')}
-              className={`px-4 py-2 rounded-md ${transactionType === 'add' ? 'bg-green-500' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-md ${transactionType === 'add' ? 'bg-success dark:bg-success' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <Text className={`text-base font-medium ${transactionType === 'add' ? 'text-white' : 'text-gray-600'}`}>দিলাম</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => setTransactionType('subtract')}
-              className={`px-4 py-2 rounded-md ml-2 ${transactionType === 'subtract' ? 'bg-red-500' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-md ml-2 ${transactionType === 'subtract' ? 'bg-warning dark:bg-warning' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <Text className={`text-base font-medium ${transactionType === 'subtract' ? 'text-white' : 'text-gray-600'}`}>পেলাম</Text>
             </TouchableOpacity>
           </View>
           <TextInput
-            className="ml-3 bg-gray-100 rounded-lg px-5 py-4 flex-1 text-base"
+            className="ml-3 bg-background dark:bg-background-dark rounded-lg px-5 py-4 flex-1 text-base text-text-primary dark:text-text-primary-dark"
             placeholder="টাকার পরিমাণ"
             value={amount}
             onChangeText={setAmount}
@@ -461,7 +459,7 @@ export default function ChatDetail() {
         </View>
         <View className="flex-row items-start mb-4">
           <TextInput
-            className="flex-1 bg-gray-100 rounded-lg px-5 py-4 mx-2 min-h-[100] text-base"
+            className="flex-1 bg-background dark:bg-background-dark rounded-lg px-5 py-4 mx-2 min-h-[100] text-base text-text-primary dark:text-text-primary-dark"
             placeholder="মেসেজ লিখেন"
             value={message}
             onChangeText={setMessage}
@@ -470,7 +468,7 @@ export default function ChatDetail() {
             textAlignVertical="top"
           />
           <TouchableOpacity onPress={sendMessage} disabled={isSending} className="mt-2">
-            <View className={`w-20 h-20 rounded-full items-center justify-center ${isSending ? 'bg-gray-400' : 'bg-green-500'}`}>
+            <View className={`w-20 h-20 rounded-full items-center justify-center ${isSending ? 'bg-gray-400 dark:bg-gray-600' : 'bg-success dark:bg-success'}`}>
               {isSending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (

@@ -1,16 +1,33 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 
 export default function BalanceCard() {
   const { user } = useAuth();
   const [payable, setPayable] = useState(0);
   const [receivable, setReceivable] = useState(0);
+  const [userName, setUserName] = useState('');
+  const [userAvatar, setUserAvatar] = useState(null);
 
   useEffect(() => {
     if (!user) return;
+
+    // Fetch user profile data
+    const fetchUserProfile = async () => {
+      const db = getFirestore();
+      const userRef = doc(db, 'users', user.id);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUserName(userData.name || userData.email?.split('@')[0] || 'User');
+        setUserAvatar(userData.profileImage);
+      }
+    };
+
+    fetchUserProfile();
 
     const db = getFirestore();
     const chatRoomsRef = collection(db, 'chatRooms');
@@ -42,42 +59,56 @@ export default function BalanceCard() {
   }, [user]);
 
   return (
-    <View className="flex-row justify-between px-4">
-      <TouchableOpacity 
-        className="bg-white rounded-2xl p-4 flex-1 mr-2 shadow-sm"
-      >
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-lg font-semibold text-gray-700">দিবো</Text>
-          <Ionicons 
-            name='arrow-up-circle'
-            size={24} 
-            color={payable ? '#ef4444' : '#64748b'}
-          />
+    <View className="flex-row justify-between items-center px-4 bg-surface dark:bg-surface-dark rounded-2xl shadow-sm p-4">
+      {/* Left side - Balance Information */}
+      <View className="flex-1">
+        <View className="flex-row items-center mb-4">
+          <View className="flex-1 mr-4">
+            <View className="flex-row items-center mb-1">
+              <Text className="text-base font-semibold text-text-secondary dark:text-text-secondary-dark">দিবো</Text>
+              <Ionicons 
+                name='arrow-up-circle'
+                size={16} 
+                color={payable ? '#ef4444' : '#64748b'}
+                style={{ marginLeft: 4 }}
+              />
+            </View>
+            <Text className={`text-xl font-bold ${payable ? 'text-warning' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
+              ৳{payable.toFixed(2)}
+            </Text>
+          </View>
+          
+          <View className="flex-1">
+            <View className="flex-row items-center mb-1">
+              <Text className="text-base font-semibold text-text-secondary dark:text-text-secondary-dark">পাবো</Text>
+              <Ionicons 
+                name='arrow-down-circle'
+                size={16} 
+                color={receivable ? '#10b981' : '#64748b'}
+                style={{ marginLeft: 4 }}
+              />
+            </View>
+            <Text className={`text-xl font-bold ${receivable ? 'text-success' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
+              ৳{receivable.toFixed(2)}
+            </Text>
+          </View>
         </View>
-        <Text 
-          className={`text-2xl font-bold ${payable ? 'text-red-500' : 'text-slate-500'}`}
-        >
-          ৳{payable.toFixed(2)}
-        </Text>
-      </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity 
-        className="bg-white rounded-2xl p-4 flex-1 ml-2 shadow-sm"
-      >
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-lg font-semibold text-gray-700">পাবো</Text>
-          <Ionicons 
-            name='arrow-down-circle'
-            size={24} 
-            color={receivable ? '#22c55e' : '#64748b'}
+      {/* Right side - User Profile */}
+      <View className="items-end">
+        {userAvatar ? (
+          <Image 
+            source={{ uri: userAvatar }} 
+            className="w-12 h-12 rounded-full mb-1"
           />
-        </View>
-        <Text 
-          className={`text-2xl font-bold ${receivable ? 'text-green-500' : 'text-slate-500'}`}
-        >
-          ৳{receivable.toFixed(2)}
-        </Text>
-      </TouchableOpacity>
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-background dark:bg-background-dark items-center justify-center mb-1">
+            <Ionicons name="person" size={24} color="#64748b" />
+          </View>
+        )}
+        <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{userName}</Text>
+      </View>
     </View>
   );
 }

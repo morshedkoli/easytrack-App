@@ -3,24 +3,50 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Primary Colors
+const primary = '#0f172a'; // Dark Navy Blue - Trust/Financial Focus
+const secondary = '#14b8a6'; // Vibrant Teal - Chat/Energy
+
+// Accent Colors
+const success = '#10b981'; // Confident Green - Financial Success
+const warning = '#f59e0b'; // Alert Orange - Warnings/Errors
+const action = '#4f46e5'; // Trust Purple - Call-to-Action
+
+// Neutral Colors
+const backgroundLight = '#f8fafc'; // Soft White
+const surfaceLight = '#ffffff'; // Pure White
+const textPrimary = '#0f172a'; // Slate 900
+const textSecondary = '#64748b'; // Slate 500
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    primary,
+    secondary,
+    success,
+    warning,
+    action,
+    text: textPrimary,
+    textSecondary,
+    background: backgroundLight,
+    surface: surfaceLight,
+    tint: primary,
+    icon: textSecondary,
+    tabIconDefault: textSecondary,
+    tabIconSelected: primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    primary,
+    secondary,
+    success,
+    warning,
+    action,
+    text: surfaceLight,
+    textSecondary: '#94a3b8',
+    background: primary,
+    surface: '#1e293b',
+    tint: secondary,
+    icon: '#94a3b8',
+    tabIconDefault: '#94a3b8',
+    tabIconSelected: secondary,
   },
 };

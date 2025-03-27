@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, ActivityIndicator, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import LottieView from 'lottie-react-native';
@@ -14,10 +14,7 @@ export default function SignIn() {
   if (user) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <View>
-         
-          <ActivityIndicator size="large" color="green" />
-        </View>
+        <ActivityIndicator size="large" color="green" />
       </View>
     );
   }
@@ -41,78 +38,88 @@ export default function SignIn() {
   };
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-blue-50 to-white p-6 justify-center">
-      {/* REMOVED Stack.Screen declaration */}
-      {/* Lottie Animation */}
-      <View className="items-center mb-4">
-        <LottieView
-          source={require('../../assets/animations/signin-animation.json')}
-          autoPlay
-          loop={false}
-          style={{ width: 150, height: 150 }}
-        />
-      </View>
-      
-      <Text variant="displaySmall" style={{ marginBottom: 16, textAlign: 'center', color: '#1a365d', fontWeight: '600' }}>Sign In</Text>
-
-      {/* Error Message */}
-      {error ? <Text className="text-red-500 mb-4 text-center font-medium">{error}</Text> : null}
-
-      {/* Email Input */}
-      <View className="mb-4">
-        <Text className="text-gray-700 mb-2 font-medium">Email</Text>
-        <TextInput
-          mode="outlined"
-          label="Email"
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-          theme={{ colors: { primary: '#3b82f6' } }}
-        />
-      </View>
-      
-      {/* Password Input */}
-      <View className="mb-6">
-        <Text className="text-gray-700 mb-2 font-medium">Password</Text>
-        <TextInput
-          mode="outlined"
-          label="Password"
-          placeholder="Enter your password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-          theme={{ colors: { primary: '#3b82f6' } }}
-        />
-        <TouchableOpacity className="mt-2 self-end">
-          <Link href="/(auth)/forgot-password" className="text-blue-600 font-medium hover:text-blue-700">
-            Forgot Password?
-          </Link>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Sign In Button */}
-      <Button 
-        mode="contained" 
-        onPress={handleSignIn}
-        disabled={isLoading}
-        style={{ marginBottom: 16, backgroundColor: '#3b82f6' }}
-        contentStyle={{ paddingVertical: 8 }}
-        labelStyle={{ fontSize: 16, fontWeight: '600' }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-gradient-to-b from-action to-secondary dark:from-primary dark:to-surface-dark"
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        className="px-6"
       >
-        {isLoading ? <ActivityIndicator color="white" /> : 'Sign In'}
-      </Button>
-      
-      {/* Sign Up Link */}
-      <View className="flex-row justify-center">
-        <Text className="text-gray-700">Don't have an account? </Text>
-        <Link href="/(auth)/sign-up" className="text-blue-600 font-semibold hover:text-blue-700">
-          Sign Up
-        </Link>
-      </View>
-    </View>
+        <View className="flex-1 justify-center">
+          <View className="bg-surface/90 dark:bg-surface-dark/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg">
+            <View className="items-center mb-6">
+              <LottieView
+                source={require('../../assets/animations/signin-animation.json')}
+                autoPlay
+                loop={false}
+                style={{ width: 120, height: 120 }}
+              />
+            </View>
+
+            <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center', color: '#0f172a', fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Easy Track</Text>
+
+            {error ? <Text className="text-red-600 mb-4 text-center font-medium">{error}</Text> : null}
+
+            <View className="space-y-4">
+              <View>
+                <Text className="text-text-secondary dark:text-text-secondary-dark mb-2 font-medium">Email</Text>
+                <TextInput
+                  mode="outlined"
+                  label="Email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  style={{ backgroundColor: 'transparent' }}
+             
+                  theme={{ colors: { primary: '#4f46e5', surface: '#ffffff', onSurface: '#0f172a' }, dark: { colors: { primary: '#4f46e5', surface: '#1e293b', onSurface: '#ffffff' } } }}
+                />
+              </View>
+
+              <View>
+                <Text className="text-text-secondary dark:text-text-secondary-dark mb-2 font-medium">Password</Text>
+                <TextInput
+                  mode="outlined"
+                  label="Password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  style={{ backgroundColor: 'transparent' }}
+               
+                  theme={{ colors: { primary: '#4f46e5', surface: '#ffffff', onSurface: '#0f172a' }, dark: { colors: { primary: '#4f46e5', surface: '#1e293b', onSurface: '#ffffff' } } }}
+                />
+                <TouchableOpacity className="mt-2 self-end">
+                  <Link href="/(auth)/forgot-password" className="text-action dark:text-secondary font-medium">
+                    Forgot Password?
+                  </Link>
+                </TouchableOpacity>
+              </View>
+
+              <Button
+                mode="contained"
+                onPress={handleSignIn}
+                disabled={isLoading}
+                style={{ marginTop: 8 }} className="bg-action dark:bg-action"
+                contentStyle={{ paddingVertical: 8 }}
+                labelStyle={{ fontSize: 16, fontWeight: '600', letterSpacing: 0.5 }}
+              >
+                {isLoading ? <ActivityIndicator color="white" /> : 'Sign In'}
+              </Button>
+
+              <View className="flex-row justify-center mt-6">
+                <Text className="text-text-primary-dark">Don't have an account? </Text>
+                <Link href="/(auth)/sign-up" className="text-action dark:text-secondary font-semibold">
+                  Sign Up
+                </Link>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

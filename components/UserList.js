@@ -146,7 +146,7 @@ export default function UserList() {
   const UserItem = ({ item, onPress }) => {
     return (
       <TouchableOpacity 
-        className="flex-row items-center p-3 border-b border-gray-100"
+        className="flex-row items-center p-3 border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-surface-dark"
         onPress={() => onPress(item.id, item.name)}
       >
         {item.avatar ? (
@@ -155,21 +155,21 @@ export default function UserList() {
             className="w-14 h-14 rounded-full mr-3"
           />
         ) : (
-          <View className="w-14 h-14 rounded-full bg-gray-300 items-center justify-center mr-3">
+          <View className="w-14 h-14 rounded-full bg-secondary items-center justify-center mr-3">
             <Ionicons name="person" size={30} color="#fff" />
           </View>
         )}
         <View className="flex-1 justify-center">
           <View className="flex-row justify-between items-center">
-            <Text className="font-semibold text-lg">{item.name}</Text>
+            <Text className="font-semibold text-lg text-text-primary dark:text-text-primary-dark">{item.name}</Text>
           </View>
           <View className="flex-row justify-between items-center mt-1">
-            <Text className="text-gray-600 text-sm" numberOfLines={1}>
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-sm" numberOfLines={1}>
               {item.email}
             </Text>
           </View>
           {item.phoneNumber && (
-            <Text className="text-gray-500 text-xs">
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-xs">
               {item.phoneNumber}
             </Text>
           )}
@@ -271,43 +271,44 @@ export default function UserList() {
       </View>
 
       {/* User List */}
-      {loading ? (
-        <View className="flex-1 justify-center items-center bg-white">
-          <LottieView
-            source={require('../assets/animations/chatlist-loading-animation.json')}
-            autoPlay
-            loop
-            style={{ width: 200, height: 200 }}
+      <View className="flex-1 bg-surface dark:bg-surface-dark">
+        {/* Search Input */}
+        <View className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <TextInput
+            className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark p-3 rounded-lg"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChangeText={handleSearch}
+            placeholderTextColor="#64748b"
           />
-          <Text className="mt-4 text-gray-600">Loading users...</Text>
         </View>
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <UserItem 
-              item={item} 
-              onPress={() => handleUserPress(item.id)}
-            />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#3b82f6']}
-              tintColor="#3b82f6"
-            />
-          }
-          ListEmptyComponent={
-            <View className="flex-1 justify-center items-center p-10">
-              <Text className="text-gray-500 text-center">
-                No users found. Try a different search.
-              </Text>
-            </View>
-          }
-        />
-      )}
+
+        {loading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color="#4f46e5" />
+          </View>
+        ) : users.length === 0 ? (
+          <View className="flex-1 justify-center items-center p-4">
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-lg text-center">
+              No users found
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={users}
+            renderItem={({ item }) => <UserItem item={item} onPress={handleUserPress} />}
+            keyExtractor={(item) => item.id}
+            className="flex-1"
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                onRefresh={fetchUsers}
+                colors={['#4f46e5']}
+              />
+            }
+          />
+        )}
+      </View>
     </View>
   );
 }
