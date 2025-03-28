@@ -17,10 +17,8 @@ const SplashScreen = () => {
     // Navigate to Home screen after animation finishes
     const timer = setTimeout(() => {
       setIsLoading(false);
-      setTimeout(() => {
-        navigation.replace('Home');
-      }, 500); // Small delay for smooth transition
-    }, 3000);
+      navigation.replace('Home');
+    }, 3000); // Adjusted timing for better splash screen experience
 
     return () => clearTimeout(timer);
   }, [navigation]);
@@ -29,7 +27,7 @@ const SplashScreen = () => {
     <View style={styles.container}>
       <LottieView
         ref={animation}
-        source={require('../../assets/animations/wallet-animation.json')}
+        source={require('../../assets/animations/chat-loading-animation.json')}
         style={styles.animation}
         autoPlay
         loop={false}
@@ -42,7 +40,7 @@ const SplashScreen = () => {
           style={styles.button}
           onPress={() => navigation.navigate('Home')}
         >
-          <Text style={styles.buttonText}>Created by Murshed</Text>
+          <Text style={styles.buttonText}>ChatTrack</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -57,8 +55,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   animation: {
-    width: 250,
-    height: 250,
+    width: 300,
+    height: 300,
   },
   loader: {
     marginTop: 20,
@@ -67,7 +65,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#6C63FF',
     borderRadius: 25,
     elevation: 3,
   },
