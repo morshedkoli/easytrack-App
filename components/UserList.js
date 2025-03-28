@@ -108,9 +108,64 @@ export default function UserList() {
     }
   };
 
-  const handleUserPress = (userId) => {
-    // Navigate to user profile or start a chat
-    router.push(`/chat/${user.id}_${userId}`);
+  const handleUserPress = async (userId, userName) => {
+    try {
+      // First add the user as a friend if not already a friend
+      if (!friendsList.includes(userId) && !addingFriend) {
+        setAddingFriend(true);
+        
+        // Update current user's friends list in Firestore
+        const userRef = doc(db, 'users', user.id);
+        await updateDoc(userRef, {
+          friends: arrayUnion(userId)
+        });
+        
+        // Also update the other user's friends list to include current user (bidirectional relationship)
+        const otherUserRef = doc(db, 'users', userId);
+        await updateDoc(otherUserRef, {
+          friends: arrayUnion(user.id)
+        });
+        
+        // Update local state
+        const updatedFriendsList = [...friendsList, userId];
+        setFriendsList(updatedFriendsList);
+        
+        // Show a brief notification
+        Alert.alert('Friend Added', `${userName} has been added to your friends list.`);
+        
+        setAddingFriend(false);
+      }
+      
+      // Initialize chat room before navigating
+      // Create a unique chat room ID by combining both user IDs (sorted to ensure consistency)
+      const participants = [user.id, userId].sort();
+      const chatRoomId = participants.join('_');
+      
+      // Check if the chat room exists
+      const chatRoomDoc = await getDoc(doc(db, 'chatRooms', chatRoomId));
+      
+      if (!chatRoomDoc.exists()) {
+        // Create a new chat room if it doesn't exist
+        await setDoc(doc(db, 'chatRooms', chatRoomId), {
+          participants,
+          createdAt: serverTimestamp(),
+          lastMessage: null,
+          lastMessageTime: serverTimestamp(),
+          balances: { [user.id]: 0, [userId]: 0 } // Initialize balances for both users
+        });
+        
+        console.log('Created new chat room:', chatRoomId);
+      } else {
+        console.log('Chat room already exists:', chatRoomId);
+      }
+      
+      // Then navigate to chat
+      router.push(`/chat/${chatRoomId}`);
+    } catch (error) {
+      console.error('Error adding friend and navigating to chat:', error);
+      Alert.alert('Error', 'Failed to add friend. Please try again.');
+      setAddingFriend(false);
+    }
   };
   
   const handleAddFriend = async (userId, userName) => {
@@ -121,7 +176,6 @@ export default function UserList() {
       
       // Check if already a friend
       if (friendsList.includes(userId)) {
-        Alert.alert('Already Friends', `${userName} is already in your friends list.`);
         return;
       }
       
@@ -131,13 +185,18 @@ export default function UserList() {
         friends: arrayUnion(userId)
       });
       
+      // Also update the other user's friends list to include current user (bidirectional relationship)
+      const otherUserRef = doc(db, 'users', userId);
+      await updateDoc(otherUserRef, {
+        friends: arrayUnion(user.id)
+      });
+      
       // Update local state
       const updatedFriendsList = [...friendsList, userId];
       setFriendsList(updatedFriendsList);
       
       // No need to manually update users list here as the useEffect will trigger fetchUsers
       
-      Alert.alert('Friend Added', `${userName} has been added to your friends list.`);
     } catch (error) {
       console.error('Error adding friend:', error);
       Alert.alert('Error', 'Failed to add friend. Please try again.');
@@ -146,12 +205,12 @@ export default function UserList() {
     }
   };
 
-  const UserItem = ({ item, onPress }) => {
+  const UserItem = ({ item }) => {
     return (
       <View className="flex-row items-center p-3 border-b border-gray-100">
         <TouchableOpacity 
           className="flex-1 flex-row items-center"
-          onPress={onPress}
+          onPress={() => handleUserPress(item.id, item.name)}
         >
         {item.avatar ? (
           <Image 
@@ -178,19 +237,6 @@ export default function UserList() {
             </Text>
           )}
         </View>
-        </TouchableOpacity>
-        
-        {/* Add Friend Button */}
-        <TouchableOpacity 
-          className={`ml-2 p-2 rounded-full ${item.isFriend ? 'bg-gray-200' : 'bg-green-500'}`}
-          onPress={() => handleAddFriend(item.id, item.name)}
-          disabled={item.isFriend || addingFriend}
-        >
-          <Ionicons 
-            name={item.isFriend ? "checkmark" : "add"} 
-            size={20} 
-            color={item.isFriend ? "#666" : "#fff"} 
-          />
         </TouchableOpacity>
       </View>
     );
@@ -234,7 +280,6 @@ export default function UserList() {
           renderItem={({ item }) => (
             <UserItem 
               item={item} 
-              onPress={() => handleUserPress(item.id)}
             />
           )}
           ListEmptyComponent={
