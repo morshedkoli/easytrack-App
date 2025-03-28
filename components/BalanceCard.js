@@ -74,9 +74,11 @@ export default function BalanceCard() {
                 style={{ marginLeft: 4 }}
               />
             </View>
-            <Text className={`text-xl font-bold ${payable ? 'text-warning' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
-              ৳{payable.toFixed(2)}
-            </Text>
+            <View className={`rounded-lg p-2 ${payable ? 'bg-red-100 dark:bg-red-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <Text className={`text-xl font-bold ${payable ? 'text-warning' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
+                ৳{payable.toFixed(2)}
+              </Text>
+            </View>
           </View>
           
           <View className="flex-1">
@@ -89,9 +91,11 @@ export default function BalanceCard() {
                 style={{ marginLeft: 4 }}
               />
             </View>
-            <Text className={`text-xl font-bold ${receivable ? 'text-success' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
-              ৳{receivable.toFixed(2)}
-            </Text>
+            <View className={`rounded-lg p-2 ${receivable ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <Text className={`text-xl font-bold ${receivable ? 'text-success' : 'text-text-secondary dark:text-text-secondary-dark'}`}>
+                ৳{receivable.toFixed(2)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
