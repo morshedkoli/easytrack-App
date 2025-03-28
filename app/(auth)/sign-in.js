@@ -4,6 +4,7 @@ import { Link, Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import LottieView from 'lottie-react-native';
 import { TextInput, Button, Card, Text } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -13,8 +14,8 @@ export default function SignIn() {
 
   if (user) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="green" />
+      <View className="flex-1 items-center justify-center bg-background dark:bg-background-dark">
+        <ActivityIndicator size="large" color="#4f46e5" />
       </View>
     );
   }
@@ -40,15 +41,15 @@ export default function SignIn() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gradient-to-b from-action to-secondary dark:from-primary dark:to-surface-dark"
+      className="flex-1 bg-background dark:bg-background-dark"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         className="px-6"
       >
-        <View className="flex-1 justify-center">
-          <View className="bg-surface/90 dark:bg-surface-dark/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg">
+        <View className="flex-1 justify-center ">
+          <View className="bg-surface/90 dark:bg-surface-dark/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-surface/20 dark:border-surface-dark/20">
             <View className="items-center mb-6">
               <LottieView
                 source={require('../../assets/animations/signin-animation.json')}
@@ -58,9 +59,9 @@ export default function SignIn() {
               />
             </View>
 
-            <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center', color: '#0f172a', fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Easy Track</Text>
+            <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center', fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Easy Track</Text>
 
-            {error ? <Text className="text-red-600 mb-4 text-center font-medium">{error}</Text> : null}
+            {error ? <Text className="text-warning mb-4 text-center font-medium">{error}</Text> : null}
 
             <View className="space-y-4">
               <View>
@@ -74,8 +75,26 @@ export default function SignIn() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   style={{ backgroundColor: 'transparent' }}
-             
-                  theme={{ colors: { primary: '#4f46e5', surface: '#ffffff', onSurface: '#0f172a' }, dark: { colors: { primary: '#4f46e5', surface: '#1e293b', onSurface: '#ffffff' } } }}
+                  left={<TextInput.Icon icon="email" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-text-secondary dark:text-text-secondary-dark" />}
+                  theme={{
+                    colors: {
+                      primary: '#4f46e5', // action color
+                      surface: '#ffffff', // surface color
+                      onSurface: '#0f172a', // text-primary color
+                      placeholder: '#64748b', // text-secondary color
+                      outline: '#64748b', // text-secondary color for border
+                    },
+                    dark: {
+                      colors: {
+                        primary: '#4f46e5', // action color
+                        surface: '#1e293b', // surface-dark color
+                        onSurface: '#ffffff', // text-primary-dark color
+                        placeholder: '#94a3b8', // text-secondary-dark color
+                        outline: '#94a3b8', // text-secondary-dark color for border
+                      }
+                    }
+                  }}
+                  className="border-text-secondary dark:border-text-secondary-dark bg-surface/50 dark:bg-surface-dark/50"
                 />
               </View>
 
@@ -89,12 +108,31 @@ export default function SignIn() {
                   onChangeText={setPassword}
                   secureTextEntry
                   style={{ backgroundColor: 'transparent' }}
-               
-                  theme={{ colors: { primary: '#4f46e5', surface: '#ffffff', onSurface: '#0f172a' }, dark: { colors: { primary: '#4f46e5', surface: '#1e293b', onSurface: '#ffffff' } } }}
+                  left={<TextInput.Icon icon="lock" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-text-secondary dark:text-text-secondary-dark" />}
+                  theme={{
+                    colors: {
+                      primary: '#4f46e5', // action color
+                      surface: '#ffffff', // surface color
+                      onSurface: '#0f172a', // text-primary color
+                      placeholder: '#64748b', // text-secondary color
+                      outline: '#64748b', // text-secondary color for border
+                    },
+                    dark: {
+                      colors: {
+                        primary: '#4f46e5', // action color
+                        surface: '#1e293b', // surface-dark color
+                        onSurface: '#ffffff', // text-primary-dark color
+                        placeholder: '#94a3b8', // text-secondary-dark color
+                        outline: '#94a3b8', // text-secondary-dark color for border
+                      }
+                    }
+                  }}
+                  className="border-text-secondary dark:border-text-secondary-dark bg-surface/50 dark:bg-surface-dark/50"
                 />
                 <TouchableOpacity className="mt-2 self-end">
-                  <Link href="/(auth)/forgot-password" className="text-action dark:text-secondary font-medium">
-                    Forgot Password?
+                  <Link href="/(auth)/forgot-password" className="text-action dark:text-secondary font-medium flex-row items-center">
+                    <Ionicons name="help-circle-outline" size={16} className="text-action dark:text-secondary" style={{ marginRight: 4 }} />
+                    <Text className="text-action dark:text-secondary font-medium">Forgot Password?</Text>
                   </Link>
                 </TouchableOpacity>
               </View>
@@ -103,18 +141,38 @@ export default function SignIn() {
                 mode="contained"
                 onPress={handleSignIn}
                 disabled={isLoading}
-                style={{ marginTop: 8 }} className="bg-action dark:bg-action"
+                style={{ marginTop: 16, borderRadius: 8 }} 
+                className="bg-action dark:bg-action shadow-sm"
                 contentStyle={{ paddingVertical: 8 }}
                 labelStyle={{ fontSize: 16, fontWeight: '600', letterSpacing: 0.5 }}
+                icon={isLoading ? null : "login"}
               >
                 {isLoading ? <ActivityIndicator color="white" /> : 'Sign In'}
               </Button>
 
-              <View className="flex-row justify-center mt-6">
-                <Text className="text-text-primary-dark">Don't have an account? </Text>
+              <View className="flex-row justify-center mt-8">
+                <Text className="text-text-secondary dark:text-text-secondary-dark">Don't have an account? </Text>
                 <Link href="/(auth)/sign-up" className="text-action dark:text-secondary font-semibold">
                   Sign Up
                 </Link>
+              </View>
+              
+              <View className="flex-row items-center justify-center mt-6">
+                <View className="h-px bg-text-secondary/20 dark:bg-text-secondary-dark/20 flex-1" />
+                <Text className="mx-4 text-text-secondary dark:text-text-secondary-dark text-xs">OR CONTINUE WITH</Text>
+                <View className="h-px bg-text-secondary/20 dark:bg-text-secondary-dark/20 flex-1" />
+              </View>
+              
+              <View className="flex-row justify-center space-x-4 mt-6">
+                <TouchableOpacity className="w-12 h-12 rounded-full bg-surface/20 dark:bg-surface-dark/20 backdrop-blur-lg items-center justify-center border border-surface/10 dark:border-surface-dark/10">
+                  <Ionicons name="logo-google" size={24} className="text-action dark:text-secondary" />
+                </TouchableOpacity>
+                <TouchableOpacity className="w-12 h-12 rounded-full bg-surface/20 dark:bg-surface-dark/20 backdrop-blur-lg items-center justify-center border border-surface/10 dark:border-surface-dark/10">
+                  <Ionicons name="logo-apple" size={24} className="text-action dark:text-secondary" />
+                </TouchableOpacity>
+                <TouchableOpacity className="w-12 h-12 rounded-full bg-surface/20 dark:bg-surface-dark/20 backdrop-blur-lg items-center justify-center border border-surface/10 dark:border-surface-dark/10">
+                  <Ionicons name="logo-facebook" size={24} className="text-action dark:text-secondary" />
+                </TouchableOpacity>
               </View>
             </View>
           </View>

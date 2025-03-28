@@ -48,7 +48,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <View className="flex-1 bg-white p-6 justify-center">
+    <View className="flex-1  dark:bg-surface-dark/90 p-6 justify-center">
       <View className="items-center mb-4">
         <LottieView
           source={require('../../assets/animations/signin-animation.json')}
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
       {successMessage ? <Text className="text-green-500 mb-4 text-center font-medium">{successMessage}</Text> : null}
       
       <View className="mb-6">
-        <Text className="text-gray-700 mb-2 font-medium">Email</Text>
+        <Text className="text-text-secondary dark:text-text-secondary-dark mb-2 font-medium">Email</Text>
         <TextInput
           className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 font-medium"
           placeholder="Enter your email"
@@ -72,6 +72,7 @@ export default function ForgotPassword() {
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          style={{ backgroundColor: 'transparent' }}
         />
       </View>
       
@@ -88,7 +89,7 @@ export default function ForgotPassword() {
       </TouchableOpacity>
       
       <View className="flex-row justify-center">
-        <Text className="text-gray-700 font-medium">Remember your password? </Text>
+        <Text className="text-text-primary-dark">Remember your password? </Text>
         <Link href="/(auth)/sign-in" className="text-blue-600 font-semibold hover:text-blue-700">
           Sign In
         </Link>

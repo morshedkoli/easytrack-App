@@ -44,7 +44,7 @@ export default function SignUp() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gradient-to-b from-action to-secondary dark:from-primary dark:to-surface-dark"
+      className="flex-1 bg-background dark:bg-background-dark"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}

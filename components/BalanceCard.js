@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { router } from 'expo-router';
 
 export default function BalanceCard() {
   const { user } = useAuth();
@@ -97,17 +98,19 @@ export default function BalanceCard() {
 
       {/* Right side - User Profile */}
       <View className="items-end">
-        {userAvatar ? (
-          <Image 
-            source={{ uri: userAvatar }} 
-            className="w-12 h-12 rounded-full mb-1"
-          />
-        ) : (
-          <View className="w-12 h-12 rounded-full bg-background dark:bg-background-dark items-center justify-center mb-1">
-            <Ionicons name="person" size={24} color="#64748b" />
-          </View>
-        )}
-        <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{userName}</Text>
+        <TouchableOpacity onPress={() => router.push('/profile')}>
+          {userAvatar ? (
+            <Image 
+              source={{ uri: userAvatar }} 
+              className="w-12 h-12 rounded-full mb-1"
+            />
+          ) : (
+            <View className="w-12 h-12 rounded-full bg-background dark:bg-background-dark items-center justify-center mb-1">
+              <Ionicons name="person" size={24} color="#64748b" />
+            </View>
+          )}
+        </TouchableOpacity>
+        {/* <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{userName}</Text> */}
       </View>
     </View>
   );

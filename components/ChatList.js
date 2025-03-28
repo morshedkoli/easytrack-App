@@ -259,20 +259,18 @@ export default function ChatList() {
 
   return (
     <View className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Search Bar */}
-      <View className="p-3 bg-background dark:bg-background-dark border-b border-gray-200 dark:border-gray-700">
-        <View className="flex-row items-center bg-surface dark:bg-surface-dark rounded-lg px-3 py-2">
-          <Ionicons name="search" size={20} color="#64748b" />
+      <View className="p-3 bg-surface dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700">
+        <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg px-3 py-2">
+          <Ionicons name="search" size={20} className="text-text-secondary dark:text-text-secondary-dark" />
           <TextInput
-            className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark"
+            className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark placeholder:text-text-secondary placeholder:dark:text-text-secondary-dark"
             placeholder="Search"
-            placeholderTextColor="#64748b"
             value={searchQuery}
             onChangeText={handleSearch}
           />
           {searchQuery ? (
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={20} color="#64748b" />
+            <TouchableOpacity onPress={() => handleSearch('')} style={{ marginLeft: 8 }}>
+              <Ionicons name="close-circle" size={20} className="text-text-secondary dark:text-text-secondary-dark" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -281,16 +279,11 @@ export default function ChatList() {
       {/* Chat List */}
       {loading ? (
         <View className="flex-1 justify-center items-center bg-surface dark:bg-surface-dark">
-          <LottieView
-            source={require('../assets/animations/chatlist-loading-animation.json')}
-            autoPlay
-            loop
-            style={{ width: 200, height: 200 }}
-          />
           <Text className="mt-4 text-text-secondary dark:text-text-secondary-dark">Loading users...</Text>
         </View>
       ) : (
         <FlatList
+          className="bg-surface dark:bg-surface-dark"
           data={chats}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -310,7 +303,7 @@ export default function ChatList() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchUsers(true)}
-              colors={['#3b82f6']}
+              colors={['#4f46e5']}
             />
           }
         />

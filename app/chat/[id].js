@@ -58,6 +58,7 @@ export default function ChatDetail() {
       fetchChatRoomDetails();
       subscribeToMessages();
     }
+    return () => setMessages([]);
   }, [user, chatRoomId]);
 
   const fetchChatRoomDetails = async () => {
@@ -340,8 +341,23 @@ export default function ChatDetail() {
       />
       <Stack.Screen 
         options={{
+
+          headerLeft: () => (
+            <TouchableOpacity 
+              onPress={() => router.back()}
+              hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
+              className="p-2"
+            >
+              <Ionicons name="arrow-back" size={24} color="#0084ff" />
+            </TouchableOpacity>
+          ),
           headerTitle: () => (
-            <View className="flex-row items-center">
+            <TouchableOpacity 
+              onPress={() => setShowProfile(true)}
+              activeOpacity={0.7}
+              className="flex-row items-center"
+              hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
+            >
               {chatPartner.avatar ? (
                 <Image 
                   source={{ uri: chatPartner.avatar }} 
@@ -356,52 +372,17 @@ export default function ChatDetail() {
                 <Text className="font-semibold text-lg">{chatPartner.name}</Text>
                 <Text className="text-xs text-gray-500">{chatPartner.status}</Text>
               </View>
-            </View>
-          ),
-          headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => {
-                // Clean up subscriptions and state before navigation
-                if (flatListRef.current) {
-                  flatListRef.current = null;
-                }
-                setMessages([]);
-                setLoading(false);
-                setIsSending(false);
-                router.back();
-              }}
-              className="p-2"
-            >
-              <Ionicons name="arrow-back" size={24} color="#0084ff" />
-            </TouchableOpacity>
-          ),
-          headerTitle: () => (
-            <TouchableOpacity onPress={() => setShowProfile(true)}>
-              <View className="flex-row items-center">
-                {chatPartner.avatar ? (
-                  <Image 
-                    source={{ uri: chatPartner.avatar }} 
-                    className="w-10 h-10 rounded-full mr-2"
-                  />
-                ) : (
-                  <View className="w-10 h-10 rounded-full bg-gray-300 items-center justify-center mr-2">
-                    <Ionicons name="person" size={18} color="#fff" />
-                  </View>
-                )}
-                <View>
-                  <Text className="font-semibold text-lg">{chatPartner.name}</Text>
-                  <Text className="text-xs text-gray-500">{chatPartner.status}</Text>
-                </View>
-              </View>
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <View className="flex-row items-center mr-4">
+            <TouchableOpacity
+              onPress={() => setShowProfile(true)}
+              className="mr-4"
+            >
               <Text className={`text-lg font-semibold ${currentUserBalance - partnerBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
                 ৳{(currentUserBalance - partnerBalance).toFixed(2)}
               </Text>
-             
-            </View>
+            </TouchableOpacity>
           ),
         }}
       />
@@ -414,21 +395,23 @@ export default function ChatDetail() {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={messages}
+            data={[...messages].reverse()} // Reverse the messages array to show newest at bottom
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <MessageItem message={item} currentUserId={user.id} />}
-            contentContainerStyle={{ paddingVertical: 10, flexGrow: 1, justifyContent: 'flex-end' }}
+            contentContainerStyle={{ paddingVertical: 10, flexGrow: 1 }}
             initialNumToRender={50}
             maxToRenderPerBatch={25}
             windowSize={21}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: true})}
-            onLayout={() => flatListRef.current?.scrollToEnd({animated: true})}
-            inverted={false}
-            maintainVisibleContentPosition={{ 
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: false})}
+            onLayout={() => flatListRef.current?.scrollToEnd({animated: false})}
+            inverted={true} // Set to true to invert the list
+            maintainVisibleContentPosition={{
               minIndexForVisible: 0,
-              autoscrollToTopThreshold: 100 
+              autoscrollToBottomThreshold: 1
             }}
             removeClippedSubviews={Platform.OS === 'android'}
+            automaticallyAdjustKeyboardInsets={true}
+            automaticallyAdjustContentInsets={true}
           />
         )}
       </View>

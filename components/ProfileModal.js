@@ -12,7 +12,7 @@ export default function ProfileModal({ isVisible, onClose, user }) {
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-black/50 justify-center items-center">
+      <View className="flex-1 bg-black/50 justify-center items-center w-full h-full" style={{ zIndex: 9999 }}>
         <View className="bg-white w-[90%] rounded-2xl overflow-hidden max-h-[80%]">
           {/* Header with close button */}
           <View className="flex-row justify-between items-center p-4 border-b border-gray-200">

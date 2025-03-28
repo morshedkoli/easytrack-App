@@ -146,7 +146,7 @@ export default function UserList() {
   const UserItem = ({ item, onPress }) => {
     return (
       <TouchableOpacity 
-        className="flex-row items-center p-3 border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-surface-dark"
+        className="flex-row items-center p-3 border-b border-text-secondary dark:border-text-secondary-dark bg-surface dark:bg-surface-dark"
         onPress={() => onPress(item.id, item.name)}
       >
         {item.avatar ? (
@@ -156,7 +156,7 @@ export default function UserList() {
           />
         ) : (
           <View className="w-14 h-14 rounded-full bg-secondary items-center justify-center mr-3">
-            <Ionicons name="person" size={30} color="#fff" />
+            <Ionicons name="person" size={30} className="text-text-primary dark:text-text-primary-dark" />
           </View>
         )}
         <View className="flex-1 justify-center">
@@ -252,40 +252,27 @@ export default function UserList() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Search Bar */}
-      <View className="p-3 bg-gray-50 border-b border-gray-200">
-        <View className="flex-row items-center bg-white rounded-lg px-3 py-2">
-          <Ionicons name="search" size={20} color="#9ca3af" />
-          <TextInput
-            className="flex-1 ml-2 text-base"
-            placeholder="Search users"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={20} color="#9ca3af" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      </View>
+     
 
       {/* User List */}
-      <View className="flex-1 bg-surface dark:bg-surface-dark">
-        {/* Search Input */}
-        <View className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <TextInput
-            className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark p-3 rounded-lg"
-            placeholder="Search users..."
-            value={searchQuery}
-            onChangeText={handleSearch}
-            placeholderTextColor="#64748b"
-          />
+      <View className="flex-1 bg-background dark:bg-background-dark">
+        {/* Search Bar */}
+        <View className="p-3 bg-surface dark:bg-surface-dark border-b border-border dark:border-border-dark">
+          <View className="flex-row items-center bg-surface-secondary dark:bg-surface-secondary-dark rounded-lg px-3 py-2">
+            <Ionicons name="search" size={20} className="text-text-secondary dark:text-text-secondary-dark" />
+            <TextInput
+              className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark"
+              placeholder="Search users"
+              placeholderTextColor="#64748b"
+              value={searchQuery}
+              onChangeText={handleSearch}
+            />
+          </View>
         </View>
 
         {loading ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#4f46e5" />
+            <ActivityIndicator size="large" className="text-action dark:text-action-dark" />
           </View>
         ) : users.length === 0 ? (
           <View className="flex-1 justify-center items-center p-4">
