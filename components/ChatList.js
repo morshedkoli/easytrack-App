@@ -259,18 +259,19 @@ export default function ChatList() {
 
   return (
     <View className="flex-1 bg-surface dark:bg-surface-dark">
-      <View className="p-3 bg-surface dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700">
+      <View className="p-3 bg-surface dark:bg-surface-dark border-b border-secondary/20 dark:border-secondary/30">
         <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg px-3 py-2">
-          <Ionicons name="search" size={20} className="text-text-secondary dark:text-text-secondary-dark" />
+          <Ionicons name="search" size={20} color="#475569" />
           <TextInput
-            className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark placeholder:text-text-secondary placeholder:dark:text-text-secondary-dark"
+            className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark"
             placeholder="Search"
+            placeholderTextColor="#475569"
             value={searchQuery}
             onChangeText={handleSearch}
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => handleSearch('')} style={{ marginLeft: 8 }}>
-              <Ionicons name="close-circle" size={20} className="text-text-secondary dark:text-text-secondary-dark" />
+              <Ionicons name="close-circle" size={20} color="#475569" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -303,7 +304,7 @@ export default function ChatList() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchUsers(true)}
-              colors={['#4f46e5']}
+              colors={['#2563eb']}
             />
           }
         />

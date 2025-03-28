@@ -387,7 +387,7 @@ export default function ChatDetail() {
         }}
       />
       
-      <View className="flex-1 bg-background dark:bg-background-dark p-3">
+      <View className="flex-1 bg-surface dark:bg-surface-dark p-3">
         {messages.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Text className="text-gray-500">No messages yet. Start the conversation!</Text>

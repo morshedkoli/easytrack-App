@@ -7,27 +7,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#0f172a',    // Dark Navy Blue
-        secondary: '#14b8a6',  // Vibrant Teal
-        success: '#10b981',    // Confident Green
-        warning: '#f59e0b',    // Alert Orange
-        action: '#4f46e5',     // Trust Purple
+        primary: '#2563eb',    // Bright Blue (Good Contrast for Light Mode)
+        secondary: '#0f766e',  // Deep Teal (Balanced Vibrancy)
+        success: '#059669',    // Strong Green (Clear Indication)
+        warning: '#d97706',    // Muted Orange (Less Harsh in Light Mode)
+        action: '#4338ca',     // Rich Indigo (Consistent with Dark Mode)
         background: {
-          DEFAULT: '#f8fafc',  // Soft White
-          dark: '#0f172a'      // Dark Navy Blue
+          DEFAULT: '#ffffff',  // Pure White
+          dark: '#f8fafc'      // Soft White (Alternative Background)
         },
         surface: {
-          DEFAULT: '#ffffff',  // Pure White
-          dark: '#1e293b'      // Dark Slate
+          DEFAULT: '#f8fafc',  // Soft White (Better Contrast)
+          dark: '#e2e8f0'      // Light Gray (Alternative Surface)
         },
         text: {
           primary: {
-            DEFAULT: '#0f172a',
-            dark: '#ffffff'
+            DEFAULT: '#1e293b',  // Dark Slate (High Readability)
+            dark: '#0f172a'      // Navy Blue (Soft Contrast)
           },
           secondary: {
-            DEFAULT: '#64748b',
-            dark: '#94a3b8'
+            DEFAULT: '#475569',  // Medium Gray (Readable Secondary Text)
+            dark: '#64748b'      // Soft Slate (Subtle Text)
           }
         }
       }

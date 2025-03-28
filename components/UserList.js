@@ -251,11 +251,11 @@ export default function UserList() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-surface dark:bg-surface-dark">
      
 
       {/* User List */}
-      <View className="flex-1 bg-background dark:bg-background-dark">
+      <View className="flex-1 bg-surface dark:bg-surface-dark">
         {/* Search Bar */}
         <View className="p-3 bg-surface dark:bg-surface-dark border-b border-border dark:border-border-dark">
           <View className="flex-row items-center bg-surface-secondary dark:bg-surface-secondary-dark rounded-lg px-3 py-2">
