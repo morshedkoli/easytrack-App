@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
-import ProfileModal from '../../components/ProfileModal';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';   
 import { useLocalSearchParams, Stack, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons'; 
 import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
@@ -331,14 +330,8 @@ export default function ChatDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <ProfileModal 
-        isVisible={showProfile} 
-        onClose={() => setShowProfile(false)} 
-        user={{
-          ...chatPartner,
-          netBalance: currentUserBalance - partnerBalance
-        }} 
-      />
+      
+        
       <Stack.Screen 
         options={{
 
@@ -353,7 +346,7 @@ export default function ChatDetail() {
           ),
           headerTitle: () => (
             <TouchableOpacity 
-              onPress={() => setShowProfile(true)}
+              onPress={() => router.push({ pathname: '/profile/[id]', params: { id: chatPartner.id } })}
               activeOpacity={0.7}
               className="flex-row items-center"
               hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
@@ -376,7 +369,7 @@ export default function ChatDetail() {
           ),
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => setShowProfile(true)}
+              onPress={() => router.push({ pathname: '/profile/[id]', params: { id: chatPartner.id } })}
               className="mr-4"
             >
               <Text className={`text-lg font-semibold ${currentUserBalance - partnerBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
