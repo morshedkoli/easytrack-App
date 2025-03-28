@@ -267,7 +267,7 @@ export default function Profile() {
           {uploadingImage && (
             <ActivityIndicator
               animating={true}
-              color="black"
+              color="#ffffff"
               style={{ position: 'absolute', top: '50%', left: '50%', marginLeft: -12, marginTop: -12 }}
             />
           )}
@@ -292,12 +292,12 @@ export default function Profile() {
             disabled={uploadingImage}
           />
         </View>
-        <Text className="text-2xl font-bold text-black  mb-1" style={{color:"black"}} >
+        <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-1">
           @{name || user?.email?.split('@')[0] || 'user'}
         </Text>
-        <Text className="text-text-secondary dark:text-text-secondary-dark text-base" style={{color:"black"}}>{user?.email}</Text>
+        <Text className="text-text-secondary dark:text-text-secondary-dark text-base">{user?.email}</Text>
         <TouchableOpacity
-          className="mt-4 bg-red-500 hover:bg-red-500 px-6 py-2 rounded-full flex-row items-center"
+          className="mt-4 bg-red-500/20 hover:bg-red-500/30 px-6 py-2 rounded-full flex-row items-center"
           onPress={() => {
             Alert.alert(
               'Sign Out',
@@ -309,14 +309,14 @@ export default function Profile() {
             );
           }}
         >
-          <Ionicons name="log-out-outline" size={20} color="#ffffff" />
+          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
           <Text className="text-red-500 ml-2 font-medium">Sign Out</Text>
         </TouchableOpacity>
       </View>
       
       <View className="flex-1 bg-surface dark:bg-surface-dark rounded-3xl px-4 p-6 min-h-[200px]">
         <View className="flex-row items-center justify-between mb-4">
-          <Text style={{color:"black"}} className="text-text-primary dark:text-text-primary-dark text-xl font-bold ml-2">Account Info</Text>
+          <Text className="text-text-primary dark:text-text-primary-dark text-xl font-bold ml-2">Account Info</Text>
           {!isEditing && (
             <IconButton
               icon="pencil"
@@ -327,8 +327,8 @@ export default function Profile() {
             />
           )}
         </View>
-        <View style={{color:"black"}} className="w-full bg-black flex-row items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark justify-between">
-          <View className="flex-row items-center flex-1 max-w-full">
+        <View className="flex-row items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark justify-between">
+          <View className="flex-row items-center flex-1">
             <Ionicons name="person-outline" size={20} color="#64748b" />
             {isEditing ? (
               <TextInput
@@ -336,20 +336,20 @@ export default function Profile() {
                 value={name}
                 onChangeText={setName}
                 mode="flat"
-                className="flex-1 ml-3 min-w-full"
+                className="flex-1 ml-3"
                 underlineColor="transparent"
-                activeUnderlineColor="#000000" /* action color */
-                style={{ backgroundColor: 'black', color: 'black' }}
+                activeUnderlineColor="#4338ca" /* action color */
+                style={{ backgroundColor: 'transparent', color: '#1f2937' }}
               />
             ) : (
-              <Text  className="flex-1 ml-3 dark:text-white">
+              <Text className="flex-1 ml-3 text-black dark:text-white">
                 {name || 'Not provided'}
               </Text>
             )}
           </View>
         </View>
-        <View className="flex-row w-full bg-black items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark mt-4 justify-between">
-          <View className="flex-row items-center flex-1 w-full">
+        <View className="flex-row items-center bg-surface-container dark:bg-surface-container-dark p-4 rounded-xl border border-outline dark:border-outline-dark mt-4 justify-between">
+          <View className="flex-row items-center flex-1">
             <Ionicons name="call-outline" size={20} color="#64748b" />
             {isEditing ? (
               <TextInput
@@ -357,13 +357,13 @@ export default function Profile() {
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 mode="flat"
-                className="flex-1 ml-3 text-black"
+                className="flex-1 ml-3"
                 underlineColor="transparent"
-                activeUnderlineColor="black" /* action color */
-                style={{ backgroundColor: 'transparent', color: 'black' }}
+                activeUnderlineColor="#4338ca" /* action color */
+                style={{ backgroundColor: 'transparent', color: '#1f2937' }}
               />
             ) : (
-              <Text  className="flex-1 ml-3  dark:text-white">
+              <Text className="flex-1 ml-3 text-black dark:text-white">
                 {phoneNumber || 'Not provided'}
               </Text>
             )}
@@ -379,7 +379,7 @@ export default function Profile() {
               setIsEditing(false);
               checkUserProfile();
             }}
-            textColor="#000000" /* text-secondary color */
+            textColor="#475569" /* text-secondary color */
             style={{
               borderColor: '#e2e8f0', /* surface-dark color */
               borderRadius: 8

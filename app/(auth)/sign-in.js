@@ -61,11 +61,11 @@ export default function SignIn() {
 
             <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center', fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Easy Track</Text>
 
-            {error ? <Text className="text-warning mb-4 text-center font-medium">{error}</Text> : null}
+            {error ? <Text className="text-warning dark:text-warning-dark mb-4 text-center font-medium">{error}</Text> : null}
 
             <View className="space-y-4">
               <View>
-                <Text className="text-text-secondary dark:text-text-secondary-dark mb-2 font-medium">Email</Text>
+                <Text className="text-secondary dark:text-secondary-dark mb-2 font-medium">Email</Text>
                 <TextInput
                   mode="outlined"
                   label="Email"
@@ -75,7 +75,7 @@ export default function SignIn() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   style={{ backgroundColor: 'transparent' }}
-                  left={<TextInput.Icon icon="email" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-text-secondary dark:text-text-secondary-dark" />}
+                  left={<TextInput.Icon icon="email" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-secondary dark:text-secondary-dark" />}
                   theme={{
                     colors: {
                       primary: '#4f46e5', // action color
@@ -99,7 +99,7 @@ export default function SignIn() {
               </View>
 
               <View>
-                <Text className="text-text-secondary dark:text-text-secondary-dark mb-2 font-medium">Password</Text>
+                <Text className="text-secondary dark:text-secondary-dark mb-2 font-medium">Password</Text>
                 <TextInput
                   mode="outlined"
                   label="Password"
@@ -108,7 +108,7 @@ export default function SignIn() {
                   onChangeText={setPassword}
                   secureTextEntry
                   style={{ backgroundColor: 'transparent' }}
-                  left={<TextInput.Icon icon="lock" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-text-secondary dark:text-text-secondary-dark" />}
+                  left={<TextInput.Icon icon="lock" color={Platform.OS === 'ios' ? '#64748b' : undefined} className="text-secondary dark:text-secondary-dark" />}
                   theme={{
                     colors: {
                       primary: '#4f46e5', // action color
@@ -130,9 +130,9 @@ export default function SignIn() {
                   className="border-text-secondary dark:border-text-secondary-dark bg-surface/50 dark:bg-surface-dark/50"
                 />
                 <TouchableOpacity className="mt-2 self-end">
-                  <Link href="/(auth)/forgot-password" className="text-action dark:text-secondary font-medium flex-row items-center">
+                  <Link href="/(auth)/forgot-password" className="text-action dark:text-action-dark font-medium flex-row items-center">
                     <Ionicons name="help-circle-outline" size={16} className="text-action dark:text-secondary" style={{ marginRight: 4 }} />
-                    <Text className="text-action dark:text-secondary font-medium">Forgot Password?</Text>
+                    <Text className="text-action dark:text-action-dark font-medium">Forgot Password?</Text>
                   </Link>
                 </TouchableOpacity>
               </View>
@@ -151,7 +151,7 @@ export default function SignIn() {
               </Button>
 
               <View className="flex-row justify-center mt-8">
-                <Text className="text-text-secondary dark:text-text-secondary-dark">Don't have an account? </Text>
+                <Text className="text-secondary dark:text-secondary-dark">Don't have an account? </Text>
                 <Link href="/(auth)/sign-up" className="text-action dark:text-secondary font-semibold">
                   Sign Up
                 </Link>

@@ -15,7 +15,7 @@ const MessageItem = ({ message, currentUserId }) => {
   return (
     <View className={`flex-row ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
       <View 
-        className={`rounded-2xl p-3 max-w-[80%] ${isMe ? 'bg-secondary/20 dark:bg-secondary/30' : 'bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-700'}`}
+        className={`rounded-2xl p-3 max-w-[80%] ${isMe ? 'bg-secondary/20 dark:bg-secondary/30' : 'bg-primary/10 dark:bg-primary/20 border border-primary/30 dark:border-primary/40'}`}
       >
         {message.amount && (
           <View className={`mb-2 p-2 rounded ${message.transactionType === 'add' ? 'bg-success/20 dark:bg-success/30' : 'bg-warning/20 dark:bg-warning/30'}`}>

@@ -13,22 +13,35 @@ module.exports = {
         warning: '#d97706',    // Muted Orange (Less Harsh in Light Mode)
         action: '#4338ca',     // Rich Indigo (Consistent with Dark Mode)
         background: {
-          DEFAULT: '#ffffff',  // Pure White
-          dark: '#f8fafc'      // Soft White (Alternative Background)
+          DEFAULT: '#f9fafb',  // Slightly off-white for better contrast
+          dark: '#1e293b'      // Dark slate for dark mode
         },
         surface: {
-          DEFAULT: '#f8fafc',  // Soft White (Better Contrast)
-          dark: '#e2e8f0'      // Light Gray (Alternative Surface)
+          DEFAULT: '#f3f4f6',  // Light gray for better contrast
+          dark: '#334155'      // Darker slate for dark mode
         },
         text: {
           primary: {
-            DEFAULT: '#1e293b',  // Dark Slate (High Readability)
-            dark: '#0f172a'      // Navy Blue (Soft Contrast)
+            DEFAULT: '#111827',  // Almost black for high contrast
+            dark: '#f8fafc'      // Very light gray for dark mode
           },
           secondary: {
-            DEFAULT: '#475569',  // Medium Gray (Readable Secondary Text)
-            dark: '#64748b'      // Soft Slate (Subtle Text)
+            DEFAULT: '#374151',  // Dark gray for secondary text
+            dark: '#e5e7eb'      // Light gray for dark mode
           }
+        },
+        // Additional theme colors for better visibility
+        accent: {
+          DEFAULT: '#7c3aed',  // Purple accent
+          dark: '#8b5cf6'      // Lighter purple for dark mode
+        },
+        error: {
+          DEFAULT: '#dc2626',  // Red for errors
+          dark: '#ef4444'      // Brighter red for dark mode
+        },
+        info: {
+          DEFAULT: '#0284c7',  // Blue for info
+          dark: '#0ea5e9'      // Brighter blue for dark mode
         }
       }
     },

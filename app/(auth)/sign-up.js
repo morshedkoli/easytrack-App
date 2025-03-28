@@ -62,7 +62,7 @@ export default function SignUp() {
               />
             </View>
 
-            <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center', color: '#0f172a', fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Create Account</Text>
+            <Text variant="displaySmall" style={{ marginBottom: 24, textAlign: 'center',  fontWeight: '700' }} className="text-primary dark:text-text-primary-dark">Create Account</Text>
 
             {error ? <Text className="text-red-600 mb-4 text-center font-medium">{error}</Text> : null}
             {successMessage ? <Text className="text-green-500 mb-4 text-center font-medium">{successMessage}</Text> : null}
