@@ -337,7 +337,13 @@ export default function ChatDetail() {
 
           headerLeft: () => (
             <TouchableOpacity 
-              onPress={() => router.back()}
+              onPress={() => {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace('/(tabs)/chats');
+  }
+}}
               hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
               className="p-2"
             >

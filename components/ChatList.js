@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, RefreshControl } fro
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { sendPushNotification } from '../services/NotificationService';
 import { useAuth } from '../context/AuthContext';
 import LottieView from 'lottie-react-native';
 import ChatItem from './ChatItem';
@@ -49,6 +50,30 @@ export default function ChatList() {
           const chatRoomData = chatRoomDoc.data();
           const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
           const netBalance = balances[user.id] - balances[friendId];
+          
+          // Check if this is a new message and send notification
+          if (chatRoomData.lastMessage && (!chats || chats.find(c => c.id === friendId)?.lastMessage !== chatRoomData.lastMessage)) {
+            // Get friend's data to check if they have a push token
+            getDoc(doc(db, 'users', friendId)).then(async (friendDoc) => {
+              if (friendDoc.exists()) {
+                const friendData = friendDoc.data();
+                if (friendData.expoPushToken && chatRoomData.lastMessageSender !== friendId) {
+                  // Only send notification if the message is not from the friend
+                  const senderDoc = await getDoc(doc(db, 'users', user.id));
+                  const senderName = senderDoc.exists() ? 
+                    (senderDoc.data().name || senderDoc.data().email?.split('@')[0] || 'User') : 'User';
+                  
+                  sendPushNotification(
+                    friendData.expoPushToken,
+                    senderName,
+                    chatRoomData.lastMessage,
+                    netBalance,
+                    chatRoomId
+                  );
+                }
+              }
+            });
+          }
 
           // Update the specific chat's balance in the state
           setChats(prevChats => {
@@ -286,6 +311,7 @@ export default function ChatList() {
         <FlatList
           className="bg-surface dark:bg-surface-dark"
           data={chats}
+          extraData={chats}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ChatItem 

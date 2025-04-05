@@ -68,8 +68,8 @@ export const sendPushNotification = async (expoPushToken, senderName, message, a
 
     if (amount) {
       const amountText = amount > 0 ? `+৳${amount}` : `-৳${Math.abs(amount)}`;
-      notificationBody = `${message}\n${amountText}`;
-      notificationTitle = `${senderName} sent a transaction`;
+      notificationBody = `${message}\nAmount: ${amountText}`;
+      notificationTitle = `${senderName}`;
     }
 
     await Notifications.scheduleNotificationAsync({
