@@ -258,14 +258,14 @@ export default function ChatDetail() {
         lastMessageTime: serverTimestamp()
       });
 
-      // Send Expo notification to chat partner
+      // Send Expo notification to chat partner only (not to sender)
       const partnerDoc = await getDoc(doc(db, 'users', chatPartner.id));
       if (partnerDoc.exists()) {
         const partnerData = partnerDoc.data();
         if (partnerData.expoPushToken) {
           const notificationMessage = message.trim() || 'New transaction';
           const amountValue = amount ? (transactionType === 'add' ? parseFloat(amount) : -parseFloat(amount)) : null;
-          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue);
+          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue, chatRoomId);
         }
       }
       

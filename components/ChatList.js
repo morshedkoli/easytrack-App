@@ -23,107 +23,83 @@ export default function ChatList() {
     if (user) {
       fetchUsers();
       // Set up real-time listeners for chat rooms
-      return setupChatRoomListeners();
+      const unsubscribe = setupChatRoomListeners();
+      return () => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      };
     }
   }, [user]);
 
   const setupChatRoomListeners = () => {
     if (!user || !user.id) return;
 
-    // Get the current user's friends list
-    const userRef = doc(db, 'users', user.id);
-    getDoc(userRef).then((userDoc) => {
+    // Set up a direct listener on the chatRooms collection where the user is a participant
+    // This is similar to how BalanceCard.js listens for updates
+    const chatRoomsRef = collection(db, 'chatRooms');
+    const q = query(chatRoomsRef, where('participants', 'array-contains', user.id));
+    
+    // This single listener will update whenever any chat room changes
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      // Get the current user's friends list to ensure we have all friend data
+      const userRef = doc(db, 'users', user.id);
+      const userDoc = await getDoc(userRef);
+      
       if (!userDoc.exists()) return;
-
+      
       const userData = userDoc.data();
       const friendsList = userData.friends || [];
-
-      // Set up listeners for each chat room
-      const unsubscribes = friendsList.map(friendId => {
-        const participants = [user.id, friendId].sort();
-        const chatRoomId = participants.join('_');
-        const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
-
-        return onSnapshot(chatRoomRef, (chatRoomDoc) => {
-          if (!chatRoomDoc.exists()) return;
-
-          const chatRoomData = chatRoomDoc.data();
-          const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
-          const netBalance = balances[user.id] - balances[friendId];
-          
-          // Check if this is a new message and send notification
-          if (chatRoomData.lastMessage && (!chats || chats.find(c => c.id === friendId)?.lastMessage !== chatRoomData.lastMessage)) {
-            // Get friend's data to check if they have a push token
-            getDoc(doc(db, 'users', friendId)).then(async (friendDoc) => {
-              if (friendDoc.exists()) {
-                const friendData = friendDoc.data();
-                if (friendData.expoPushToken && chatRoomData.lastMessageSender !== friendId) {
-                  // Only send notification if the message is not from the friend
-                  const senderDoc = await getDoc(doc(db, 'users', user.id));
-                  const senderName = senderDoc.exists() ? 
-                    (senderDoc.data().name || senderDoc.data().email?.split('@')[0] || 'User') : 'User';
-                  
-                  sendPushNotification(
-                    friendData.expoPushToken,
-                    senderName,
-                    chatRoomData.lastMessage,
-                    netBalance,
-                    chatRoomId
-                  );
-                }
-              }
-            });
-          }
-
-          // Update the specific chat's balance in the state
-          setChats(prevChats => {
-            const updatedChats = prevChats.map(chat => {
-              if (chat.id === friendId) {
-                return {
-                  ...chat,
-                  netBalance,
-                  lastMessage: chatRoomData.lastMessage || chat.lastMessage,
-                  lastMessageTime: chatRoomData.lastMessageTime ? chatRoomData.lastMessageTime.toDate() : chat.lastMessageTime,
-                  time: chatRoomData.lastMessageTime ? 
-                    chatRoomData.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
-                    chat.time
-                };
-              }
-              return chat;
-            });
-
-            // Sort by last message time
-            return [...updatedChats].sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-          });
-
-          // Update allUsers state as well to keep it in sync
-          setAllUsers(prevUsers => {
-            const updatedUsers = prevUsers.map(user => {
-              if (user.id === friendId) {
-                return {
-                  ...user,
-                  netBalance,
-                  lastMessage: chatRoomData.lastMessage || user.lastMessage,
-                  lastMessageTime: chatRoomData.lastMessageTime ? chatRoomData.lastMessageTime.toDate() : user.lastMessageTime,
-                  time: chatRoomData.lastMessageTime ? 
-                    chatRoomData.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
-                    user.time
-                };
-              }
-              return user;
-            });
-
-            // Sort by last message time
-            return [...updatedUsers].sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-          });
+      
+      // Create a map to store updated chat data
+      const updatedChatsMap = new Map();
+      
+      // Process all chat rooms from the snapshot
+      const chatRoomPromises = snapshot.docs.map(async (chatRoomDoc) => {
+        const chatRoomData = chatRoomDoc.data();
+        const participants = chatRoomData.participants || [];
+        const friendId = participants.find(id => id !== user.id);
+        
+        if (!friendId || !friendsList.includes(friendId)) return null;
+        
+        // Get friend's user data
+        const friendDoc = await getDoc(doc(db, 'users', friendId));
+        if (!friendDoc.exists()) return null;
+        
+        const friendData = friendDoc.data();
+        const balances = chatRoomData.balances || { [user.id]: 0, [friendId]: 0 };
+        const netBalance = balances[user.id] - balances[friendId];
+        
+        // Create updated chat object
+        const lastMessageTime = chatRoomData.lastMessageTime ? chatRoomData.lastMessageTime.toDate() : new Date(0);
+        
+        updatedChatsMap.set(friendId, {
+          id: friendId,
+          name: friendData.name || friendData.email?.split('@')[0] || 'User',
+          avatar: friendData.profileImage || null,
+          lastMessage: chatRoomData.lastMessage || 'Tap to start chatting',
+          time: lastMessageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          lastMessageTime: lastMessageTime,
+          unread: 0,
+          email: friendData.email,
+          netBalance: netBalance
         });
       });
-
-      // Return cleanup function
-      return () => {
-        unsubscribes.forEach(unsubscribe => unsubscribe());
-      };
+      
+      // Wait for all promises to resolve
+      await Promise.all(chatRoomPromises);
+      
+      // Convert map to array and sort by lastMessageTime
+      const updatedChats = Array.from(updatedChatsMap.values())
+        .filter(chat => chat !== null)
+        .sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+      
+      // Update both state variables with the new data
+      setAllUsers(updatedChats);
+      setChats(updatedChats);
     });
+
+    return unsubscribe;
   };
   
 

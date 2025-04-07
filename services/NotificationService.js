@@ -11,6 +11,9 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Track last notification timestamp to prevent duplicate notifications
+let lastNotificationTimestamp = 0;
+
 // Handle notification press
 const notificationListener = Notifications.addNotificationResponseReceivedListener(response => {
   const { chatRoomId } = response.notification.request.content.data;
@@ -37,6 +40,9 @@ export const registerForPushNotificationsAsync = async (userId) => {
     await updateDoc(userRef, {
       expoPushToken: token,
     });
+    
+    // Clear any old notifications when registering
+    await Notifications.dismissAllNotificationsAsync();
 
     return token;
   } catch (error) {
@@ -63,6 +69,33 @@ export const unregisterForNotificationsAsync = async (userId) => {
 
 export const sendPushNotification = async (expoPushToken, senderName, message, amount = null, chatRoomId = null) => {
   try {
+    // Check if expoPushToken exists - only send to recipient
+    if (!expoPushToken) {
+      console.log('No push token available for recipient');
+      return;
+    }
+    
+    // Get current timestamp
+    const currentTime = new Date().getTime();
+    
+    // Prevent duplicate notifications within 2 seconds
+    if (currentTime - lastNotificationTimestamp < 2000) {
+      console.log('Skipping duplicate notification');
+      return;
+    }
+    
+    // Get the current user's push token to avoid sending notifications to self
+    const currentUserToken = await Notifications.getExpoPushTokenAsync().then(token => token.data).catch(() => null);
+    
+    // If the recipient token is the same as the current user's token, don't send notification
+    if (currentUserToken && expoPushToken === currentUserToken) {
+      console.log('Avoiding sending notification to self');
+      return;
+    }
+    
+    // Update last notification timestamp
+    lastNotificationTimestamp = currentTime;
+    
     let notificationBody = message;
     let notificationTitle = senderName;
 
