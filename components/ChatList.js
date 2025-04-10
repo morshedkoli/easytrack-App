@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { getFirestore, collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
-import { sendPushNotification } from '../services/NotificationService';
+import { collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { useNetwork } from '../context/NetworkContext';
 import LottieView from 'lottie-react-native';
 import ChatItem from './ChatItem';
 
@@ -15,9 +16,9 @@ export default function ChatList() {
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { offlineMode } = useNetwork();
   
-  // Initialize Firestore
-  const db = getFirestore();
+  // Firestore is initialized in firebase/firestore.js with offline persistence
 
   useEffect(() => {
     if (user) {
@@ -260,6 +261,12 @@ export default function ChatList() {
 
   return (
     <View className="flex-1 bg-surface dark:bg-surface-dark">
+      {offlineMode && (
+        <View className="bg-warning/20 px-3 py-2 flex-row items-center justify-center">
+          <Ionicons name="cloud-offline" size={18} color="#f59e0b" />
+          <Text className="ml-2 text-warning font-medium">Offline Mode - Viewing cached data</Text>
+        </View>
+      )}
       <View className="p-3 bg-surface dark:bg-surface-dark border-b border-secondary/20 dark:border-secondary/30">
         <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg px-3 py-2">
           <Ionicons name="search" size={20} color="#475569" />

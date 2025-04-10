@@ -23,4 +23,4 @@ const auth = initializeAuth(app, {
 // Initialize Firebase Storage
 const storage = getStorage(app);
 
-export { auth, storage };
+export { auth, storage, app };

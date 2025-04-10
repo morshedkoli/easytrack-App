@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1018314548876",
+    "project_id": "askme-d018c",
+    "storage_bucket": "askme-d018c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018314548876:android:f06b0c43e9e6a672d2fda9",
+        "android_client_info": {
+          "package_name": "com.murshedkoli.chattrans"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018314548876-g8sckhu2omgcun5heck2ev007h90neqv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1qRYKB3kjoe4IebnVeE-jkXsmXuD2Ids"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018314548876-g8sckhu2omgcun5heck2ev007h90neqv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

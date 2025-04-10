@@ -14,11 +14,22 @@ const SplashScreen = () => {
       animation.current.play();
     }
 
+    // Notification code removed
+
     // Navigate to Home screen after animation finishes
     const timer = setTimeout(() => {
       setIsLoading(false);
       navigation.replace('Home');
-    }, 3000); // Adjusted timing for better splash screen experience
+    }, 3000); // Ensure this matches animation duration
+    
+    // Force show splash screen for minimum duration
+    const minDuration = 2000;
+    setTimeout(() => {
+      if (isLoading) {
+        setIsLoading(false);
+        navigation.replace('Home');
+      }
+    }, minDuration);
 
     return () => clearTimeout(timer);
   }, [navigation]);

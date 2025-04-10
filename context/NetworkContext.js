@@ -1,7 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirestore, collection, doc, setDoc, updateDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { sendPushNotification } from '../services/NotificationService';
+import { collection, doc, setDoc, updateDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { db } from '../firebase/firestore';
 
 const NetworkContext = createContext();
 
@@ -12,15 +14,29 @@ export function useNetwork() {
 export function NetworkProvider({ children }) {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingOperations, setPendingOperations] = useState([]);
-  const db = getFirestore();
+  const [offlineMode, setOfflineMode] = useState(false);
 
-  // Monitor network state
+  // Monitor network state with improved error handling
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
+      const wasOffline = !isOnline;
       setIsOnline(state.isConnected);
-      if (state.isConnected) {
-        syncPendingOperations();
+      setOfflineMode(!state.isConnected);
+      
+      // If we're coming back online after being offline
+      if (state.isConnected && wasOffline) {
+        console.log('Connection restored. Syncing pending operations...');
+        // Delay sync operation to allow Firestore connection to stabilize
+        setTimeout(() => {
+          syncPendingOperations();
+        }, 2000); // 2-second delay
       }
+    });
+
+    // Check connection status immediately
+    NetInfo.fetch().then(state => {
+      setIsOnline(state.isConnected);
+      setOfflineMode(!state.isConnected);
     });
 
     return () => unsubscribe();
@@ -55,18 +71,39 @@ export function NetworkProvider({ children }) {
   const syncPendingOperations = async () => {
     if (!isOnline || pendingOperations.length === 0) return;
 
+    console.log(`Syncing ${pendingOperations.length} pending operations`);
+    
+    // Create a copy of operations to process
     const operations = [...pendingOperations];
-    setPendingOperations([]);
-    await AsyncStorage.removeItem('pendingOperations');
-
+    
+    // Track successfully processed operations
+    const successfulOperations = [];
+    const failedOperations = [];
+    
     for (const operation of operations) {
       try {
         switch (operation.type) {
           case 'message':
             await setDoc(doc(collection(db, 'chatRooms', operation.chatRoomId, 'messages')), {
               ...operation.data,
-              timestamp: new Date(operation.data.timestamp)
+              timestamp: new Date(operation.data.timestamp),
+              offlineCreated: true
             });
+            
+            // Send notification for the message if it contains sender info
+            if (operation.senderInfo) {
+              try {
+                await sendPushNotification(
+                  operation.receiverId,
+                  operation.senderInfo.name || operation.senderInfo.email?.split('@')[0] || 'User',
+                  operation.data.text,
+                  operation.data.amount || null,
+                  operation.data.transactionType || null
+                );
+              } catch (notificationError) {
+                console.error('Error sending pending notification:', notificationError);
+              }
+            }
             break;
           case 'profile':
             await updateDoc(doc(db, 'users', operation.userId), operation.data);
@@ -76,18 +113,39 @@ export function NetworkProvider({ children }) {
               [`balances.${operation.userId}`]: operation.data.balance
             });
             break;
+          case 'chatRoom':
+            // Handle chat room updates
+            await updateDoc(doc(db, 'chatRooms', operation.chatRoomId), operation.data);
+            break;
         }
+        
+        // If we get here, the operation was successful
+        successfulOperations.push(operation);
       } catch (error) {
         console.error('Error syncing operation:', error);
-        await savePendingOperation(operation);
+        failedOperations.push(operation);
       }
+    }
+    
+    // Update pending operations to only include failed ones
+    if (failedOperations.length > 0) {
+      setPendingOperations(failedOperations);
+      await AsyncStorage.setItem('pendingOperations', JSON.stringify(failedOperations));
+      console.log(`${successfulOperations.length} operations synced, ${failedOperations.length} failed`);
+    } else {
+      // All operations succeeded, clear the list
+      setPendingOperations([]);
+      await AsyncStorage.removeItem('pendingOperations');
+      console.log(`All ${successfulOperations.length} operations synced successfully`);
     }
   };
 
   const value = {
     isOnline,
+    offlineMode,
     savePendingOperation,
-    syncPendingOperations
+    syncPendingOperations,
+    pendingOperationsCount: pendingOperations.length
   };
 
   return (

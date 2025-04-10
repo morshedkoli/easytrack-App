@@ -8,15 +8,9 @@
     "scheme": "chat-trans",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "notification": {
-      "icon": "./assets/images/icon.png",
-      "color": "#ffffff",
-      "androidMode": "default",
-      "androidCollapsedTitle": "New Message",
-      "iosDisplayInForeground": true
-    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.murshedkoli.chattrans"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +18,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.murshedkoli.chattrans",
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -42,7 +37,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": ["./assets/sounds/notification.wav"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

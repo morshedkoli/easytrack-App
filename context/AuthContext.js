@@ -7,6 +7,7 @@ import {
   signOut as firebaseSignOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
+import { registerForPushNotificationsAsync } from '../services/NotificationService';
 
 const AuthContext = createContext(null);
 
@@ -59,10 +60,24 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+      
+      // Set user state immediately to improve perceived performance
       setUser({
-        id: userCredential.user.uid,
+        id: userId,
         email: userCredential.user.email
       });
+      
+      // Register for push notifications in the background with error handling
+      setTimeout(async () => {
+        try {
+          await registerForPushNotificationsAsync(userId);
+        } catch (notificationError) {
+          console.error('Error registering for push notifications:', notificationError);
+          // Continue with sign in even if notification registration fails
+        }
+      }, 1000); // Delay by 1 second to avoid network contention
+      
       return { success: true };
     } catch (error) {
       let errorMessage = 'Failed to sign in';
@@ -91,8 +106,18 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+      
+      // Register for push notifications
+      try {
+        await registerForPushNotificationsAsync(userId);
+      } catch (notificationError) {
+        console.error('Error registering for push notifications:', notificationError);
+        // Continue with sign up even if notification registration fails
+      }
+      
       setUser({
-        id: userCredential.user.uid,
+        id: userId,
         email: userCredential.user.email
       });
       return { success: true };

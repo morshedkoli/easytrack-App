@@ -1,6 +1,8 @@
 import * as Notifications from 'expo-notifications';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import { router } from 'expo-router';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/firestore';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -11,117 +13,167 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Track last notification timestamp to prevent duplicate notifications
-let lastNotificationTimestamp = 0;
+/**
+ * Register for push notifications and return the token
+ */
+export async function registerForPushNotificationsAsync(userId) {
+  let token;
 
-// Handle notification press
-const notificationListener = Notifications.addNotificationResponseReceivedListener(response => {
-  const { chatRoomId } = response.notification.request.content.data;
-  if (chatRoomId) {
-    router.push(`/chat/${chatRoomId}`);
-  }
-});
+  // Check if this is a physical device (notifications won't work in simulators)
+  if (Device.isDevice) {
+    // Check if we have permission, if not request it
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-export const registerForPushNotificationsAsync = async (userId) => {
-  try {
-    // Request permissions
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      console.warn('Notification permissions not granted');
-      return null;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
     }
-    
-    // Get device token
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
 
-    // Save the token to Firestore
-    const db = getFirestore();
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      expoPushToken: token,
+    // If we still don't have permission, we can't proceed
+    if (finalStatus !== 'granted') {
+      console.log('Failed to get push token for push notification!');
+      return;
+    }
+
+    // Get the Expo push token
+    token = (await Notifications.getExpoPushTokenAsync({
+      projectId: 'c75cf83e-278b-4028-a14b-f63089fc88e2', // From app.json
+    })).data;
+
+    // Save the token to the user's document in Firestore
+    if (userId && token) {
+      await saveUserPushToken(userId, token);
+    }
+  } else {
+    console.log('Must use physical device for Push Notifications');
+  }
+
+  // Set up notification categories/channels for Android
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
     });
-    
-    // Clear any old notifications when registering
-    await Notifications.dismissAllNotificationsAsync();
-
-    return token;
-  } catch (error) {
-    console.error('Error registering for push notifications:', error);
-    return null;
   }
-};
 
-export const unregisterForNotificationsAsync = async (userId) => {
+  return token;
+}
+
+/**
+ * Save the user's push token to Firestore
+ */
+async function saveUserPushToken(userId, token) {
   try {
-    // Remove the token from Firestore
-    const db = getFirestore();
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      expoPushToken: null,
-    });
+    const userDoc = await getDoc(userRef);
 
-    // Remove notification listener
-    notificationListener.remove();
+    if (userDoc.exists()) {
+      // Update existing user document
+      await updateDoc(userRef, {
+        pushToken: token,
+        tokenUpdatedAt: new Date()
+      });
+    } else {
+      // Create new user document with token
+      await setDoc(userRef, {
+        pushToken: token,
+        tokenUpdatedAt: new Date(),
+        createdAt: new Date()
+      }, { merge: true });
+    }
+    console.log('Push token saved successfully');
   } catch (error) {
-    console.error('Error unregistering for notifications:', error);
+    console.error('Error saving push token:', error);
   }
-};
+}
 
-export const sendPushNotification = async (expoPushToken, senderName, message, amount = null, chatRoomId = null) => {
+/**
+ * Send a push notification to a specific user
+ */
+export async function sendPushNotification(receiverId, senderName, message, amount = null, transactionType = null) {
   try {
-    // Check if expoPushToken exists - only send to recipient
-    if (!expoPushToken) {
-      console.log('No push token available for recipient');
+    // Get the receiver's push token
+    const receiverRef = doc(db, 'users', receiverId);
+    const receiverDoc = await getDoc(receiverRef);
+    
+    if (!receiverDoc.exists()) {
+      console.log('Receiver document not found');
       return;
     }
     
-    // Get current timestamp
-    const currentTime = new Date().getTime();
+    const receiverData = receiverDoc.data();
+    const pushToken = receiverData.pushToken;
     
-    // Prevent duplicate notifications within 2 seconds
-    if (currentTime - lastNotificationTimestamp < 2000) {
-      console.log('Skipping duplicate notification');
+    if (!pushToken) {
+      console.log('No push token found for receiver');
       return;
     }
-    
-    // Get the current user's push token to avoid sending notifications to self
-    const currentUserToken = await Notifications.getExpoPushTokenAsync().then(token => token.data).catch(() => null);
-    
-    // If the recipient token is the same as the current user's token, don't send notification
-    if (currentUserToken && expoPushToken === currentUserToken) {
-      console.log('Avoiding sending notification to self');
-      return;
-    }
-    
-    // Update last notification timestamp
-    lastNotificationTimestamp = currentTime;
-    
-    let notificationBody = message;
-    let notificationTitle = senderName;
 
+    // Prepare notification content
+    let title = `Message from ${senderName}`;
+    let body = message;
+
+    // If there's a transaction, include it in the notification
     if (amount) {
-      const amountText = amount > 0 ? `+৳${amount}` : `-৳${Math.abs(amount)}`;
-      notificationBody = `${message}\nAmount: ${amountText}`;
-      notificationTitle = `${senderName}`;
+      const amountText = parseFloat(amount).toFixed(2);
+      const symbol = transactionType === 'add' ? '+' : '-';
+      title = `${senderName} sent a transaction`;
+      body = `${symbol} ৳${amountText}${message ? ` - ${message}` : ''}`;
     }
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: notificationTitle,
-        body: notificationBody,
-        sound: 'default',
-        data: {
-          message,
-          amount,
-          chatRoomId,
-          type: 'chat_message',
-          senderName,
-          timestamp: new Date().toISOString()
-        },
+    // Send the notification
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      trigger: null, // Send immediately
+      body: JSON.stringify({
+        to: pushToken,
+        title,
+        body,
+        sound: 'default',
+        data: { 
+          senderId: receiverId,
+          amount,
+          transactionType,
+          message
+        },
+      }),
     });
+
+    console.log('Push notification sent successfully');
   } catch (error) {
     console.error('Error sending push notification:', error);
   }
-};
+}
+
+/**
+ * Set up notification listeners
+ */
+export function setupNotificationListeners(navigation) {
+  // Handle notifications that are received while the app is foregrounded
+  const foregroundSubscription = Notifications.addNotificationReceivedListener(notification => {
+    console.log('Notification received in foreground:', notification);
+  });
+
+  // Handle notifications that are tapped by the user
+  const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const { data } = response.notification.request.content;
+    console.log('Notification tapped:', data);
+    
+    // Navigate to the chat screen if we have a senderId
+    if (data.senderId) {
+      // Navigate to the chat screen
+      navigation.navigate('chat', { id: data.senderId });
+    }
+  });
+
+  // Return cleanup function
+  return () => {
+    foregroundSubscription.remove();
+    responseSubscription.remove();
+  };
+}

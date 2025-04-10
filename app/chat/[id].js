@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';   
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; 
-import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import LottieView from 'lottie-react-native';
@@ -33,7 +34,7 @@ const MessageItem = ({ message, currentUserId }) => {
 export default function ChatDetail() {
   const { id: chatRoomId } = useLocalSearchParams();
   const { user } = useAuth();
-  const { isOnline, savePendingOperation } = useNetwork();
+  const { isOnline, offlineMode, savePendingOperation } = useNetwork();
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('add');
@@ -49,8 +50,7 @@ export default function ChatDetail() {
   // Add a ref for the FlatList to control scrolling
   const flatListRef = useRef(null);
   
-  // Initialize Firestore
-  const db = getFirestore();
+  // Firestore is initialized in firebase/firestore.js with offline persistence
 
   useEffect(() => {
     if (user && chatRoomId) {
@@ -59,6 +59,9 @@ export default function ChatDetail() {
     }
     return () => setMessages([]);
   }, [user, chatRoomId]);
+
+  // We don't need to manually scroll with inverted lists
+  // The inverted list automatically shows newest messages at the bottom
 
   const fetchChatRoomDetails = async () => {
     try {
@@ -152,17 +155,6 @@ export default function ChatDetail() {
       
       setMessages(messageList);
       setLoading(false);
-      
-      // Scroll to the bottom when new messages arrive - improved with immediate attempt
-      if (flatListRef.current && messageList.length > 0) {
-        flatListRef.current.scrollToEnd({ animated: true });
-        // Also try with a slight delay to ensure rendering is complete
-        setTimeout(() => {
-          if (flatListRef.current) {
-            flatListRef.current.scrollToEnd({ animated: true });
-          }
-        }, 100);
-      }
     });
     
     // Clean up subscription on unmount
@@ -184,6 +176,7 @@ export default function ChatDetail() {
         text: message,
         senderId: user.id,
         timestamp: new Date(),
+        offlineCreated: !isOnline
       };
 
       if (amount) {
@@ -232,11 +225,16 @@ export default function ChatDetail() {
       }
 
       if (!isOnline) {
-        // Store message for later sync
+        // Store message for later sync with sender info for notifications
         await savePendingOperation({
           type: 'message',
           chatRoomId,
-          data: messageData
+          data: messageData,
+          senderInfo: {
+            name: user.name || user.email?.split('@')[0] || 'User',
+            email: user.email
+          },
+          receiverId: chatPartner.id
         });
         // Add message to local state
         const timestamp = new Date();
@@ -258,30 +256,27 @@ export default function ChatDetail() {
         lastMessageTime: serverTimestamp()
       });
 
-      // Send Expo notification to chat partner only (not to sender)
-      const partnerDoc = await getDoc(doc(db, 'users', chatPartner.id));
-      if (partnerDoc.exists()) {
-        const partnerData = partnerDoc.data();
-        if (partnerData.expoPushToken) {
-          const notificationMessage = message.trim() || 'New transaction';
-          const amountValue = amount ? (transactionType === 'add' ? parseFloat(amount) : -parseFloat(amount)) : null;
-          await sendPushNotification(partnerData.expoPushToken, user.email?.split('@')[0] || 'User', notificationMessage, amountValue, chatRoomId);
+      // Send push notification to chat partner
+      if (isOnline) {
+        try {
+          await sendPushNotification(
+            chatPartner.id,
+            user.name || user.email?.split('@')[0] || 'User',
+            message.trim(),
+            amount ? parseFloat(amount) : null,
+            amount ? transactionType : null
+          );
+        } catch (notificationError) {
+          console.error('Error sending push notification:', notificationError);
+          // Continue even if notification fails
         }
       }
       
       setMessage('');
       setAmount('');
       
-      // Scroll to bottom immediately after sending a message
-      if (flatListRef.current) {
-        flatListRef.current.scrollToEnd({ animated: false });
-        // Also try with a slight delay to ensure rendering is complete
-        setTimeout(() => {
-          if (flatListRef.current) {
-            flatListRef.current.scrollToEnd({ animated: true });
-          }
-        }, 100);
-      }
+      // With an inverted list, new messages appear at the top automatically
+      // No need to manually scroll
     } catch (error) {
       console.error('Error sending message:', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -330,6 +325,12 @@ export default function ChatDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
+      {offlineMode && (
+        <View className="bg-warning/20 px-3 py-2 flex-row items-center justify-center">
+          <Ionicons name="cloud-offline" size={18} color="#f59e0b" />
+          <Text className="ml-2 text-warning font-medium">Offline Mode - Viewing cached data</Text>
+        </View>
+      )}
       
         
       <Stack.Screen 
@@ -397,18 +398,20 @@ export default function ChatDetail() {
             data={[...messages].reverse()} // Reverse the messages array to show newest at bottom
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <MessageItem message={item} currentUserId={user.id} />}
-            contentContainerStyle={{ paddingVertical: 10, flexGrow: 1 }}
+            contentContainerStyle={{ 
+              paddingVertical: 10,
+              flexGrow: 1, 
+              justifyContent: 'flex-end' // This helps with inverted lists
+            }}
             initialNumToRender={50}
             maxToRenderPerBatch={25}
             windowSize={21}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: false})}
-            onLayout={() => flatListRef.current?.scrollToEnd({animated: false})}
             inverted={true} // Set to true to invert the list
             maintainVisibleContentPosition={{
               minIndexForVisible: 0,
-              autoscrollToBottomThreshold: 1
+              autoscrollToTopThreshold: 10 // Changed from autoscrollToBottomThreshold
             }}
-            removeClippedSubviews={Platform.OS === 'android'}
+            removeClippedSubviews={false} // Disable this to prevent rendering issues
             automaticallyAdjustKeyboardInsets={true}
             automaticallyAdjustContentInsets={true}
           />

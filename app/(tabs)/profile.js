@@ -3,7 +3,6 @@ import { View, ScrollView, Alert, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import { Ionicons } from '@expo/vector-icons';
-import { registerForPushNotificationsAsync } from '../../services/NotificationService';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
@@ -40,7 +39,7 @@ export default function Profile() {
     // Only attempt to check user profile if user is defined and has an id
     if (user && user.id) {
       checkUserProfile();
-      registerForPushNotificationsAsync(user.id);
+      // Removed registerForPushNotificationsAsync call
     }
   }, [user]);
 

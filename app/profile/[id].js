@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, ScrollView } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -47,7 +47,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-surface dark:bg-surface-dark">
       <Stack.Screen 
         options={{
           title: profileUser.name,
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         }} 
       />
       
-      <ScrollView className="p-4">
+      <ScrollView className="p-4" showsVerticalScrollIndicator={false}>
         {/* Profile Image */}
         <View className="items-center mb-6">
           {profileUser.avatar ? (
@@ -73,18 +73,18 @@ export default function ProfilePage() {
         {/* User Info */}
         <View className="space-y-4">
           <View className="space-y-2">
-            <Text className="text-gray-500 text-sm">Name</Text>
-            <Text className="text-lg font-semibold">{profileUser.name}</Text>
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-sm">Name</Text>
+            <Text className="text-lg font-semibold text-text-primary dark:text-text-primary-dark">{profileUser.name}</Text>
           </View>
 
           <View className="space-y-2">
-            <Text className="text-gray-500 text-sm">Email</Text>
-            <Text className="text-lg">{profileUser.email}</Text>
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-sm">Email</Text>
+            <Text className="text-lg text-text-primary dark:text-text-primary-dark">{profileUser.email}</Text>
           </View>
 
           <View className="space-y-2">
-            <Text className="text-gray-500 text-sm">Phone Number</Text>
-            <Text className="text-lg">{profileUser.phoneNumber}</Text>
+            <Text className="text-text-secondary dark:text-text-secondary-dark text-sm">Phone Number</Text>
+            <Text className="text-lg text-text-primary dark:text-text-primary-dark">{profileUser.phoneNumber}</Text>
           </View>
         </View>
       </ScrollView>
