@@ -25,7 +25,15 @@ const MessageItem = ({ message, currentUserId }) => {
           </View>
         )}
         <Text className="text-text-primary dark:text-text-primary-dark text-base">{message.text}</Text>
-        <Text className="text-xs text-text-secondary dark:text-text-secondary-dark text-right mt-1">{message.date} {message.time}</Text>
+        <View className="flex-row justify-end items-center mt-1">
+          {message.pending && (
+            <View className="flex-row items-center mr-2">
+              <Ionicons name="time-outline" size={12} color="#f59e0b" />
+              <Text className="text-xs text-warning ml-1">Pending</Text>
+            </View>
+          )}
+          <Text className="text-xs text-text-secondary dark:text-text-secondary-dark">{message.date} {message.time}</Text>
+        </View>
       </View>
     </View>
   );
@@ -34,7 +42,7 @@ const MessageItem = ({ message, currentUserId }) => {
 export default function ChatDetail() {
   const { id: chatRoomId } = useLocalSearchParams();
   const { user } = useAuth();
-  const { isOnline, offlineMode, savePendingOperation } = useNetwork();
+  const { isOnline, offlineMode, savePendingOperation, addMessageToQueue, syncOfflineMessages, messageQueue, cacheMessages, getCachedMessages } = useNetwork();
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('add');
@@ -55,10 +63,21 @@ export default function ChatDetail() {
   useEffect(() => {
     if (user && chatRoomId) {
       fetchChatRoomDetails();
+      
+      // If we're offline, load cached messages first
+      if (offlineMode) {
+        const cachedMsgs = getCachedMessages(chatRoomId);
+        if (cachedMsgs && cachedMsgs.length > 0) {
+          setMessages(cachedMsgs);
+          setLoading(false);
+        }
+      }
+      
+      // Always try to subscribe to real-time updates
       subscribeToMessages();
     }
     return () => setMessages([]);
-  }, [user, chatRoomId]);
+  }, [user, chatRoomId, offlineMode]);
 
   // We don't need to manually scroll with inverted lists
   // The inverted list automatically shows newest messages at the bottom
@@ -127,6 +146,50 @@ export default function ChatDetail() {
   };
 
   const subscribeToMessages = () => {
+    // If we're offline, we've already loaded cached messages in useEffect
+    if (offlineMode) {
+      // Check if there are any pending messages in the queue for this chat room
+      const pendingMessages = messageQueue[chatRoomId] || [];
+      if (pendingMessages.length > 0) {
+        // Format and add pending messages to the displayed messages
+        const formattedPendingMessages = pendingMessages.map(data => {
+          const timestamp = new Date(data.timestamp);
+          
+          // Format date as "15 Mar 2025"
+          const day = timestamp.getDate();
+          const month = timestamp.toLocaleString('en-US', { month: 'short' });
+          const year = timestamp.getFullYear();
+          const formattedDate = `${day} ${month} ${year}`;
+          
+          return {
+            id: data.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            text: data.text,
+            senderId: data.senderId,
+            amount: data.amount,
+            transactionType: data.transactionType,
+            date: formattedDate,
+            time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            pending: true
+          };
+        });
+        
+        // Combine cached messages with pending messages
+        setMessages(prev => {
+          const combinedMessages = [...prev, ...formattedPendingMessages];
+          // Sort by timestamp (assuming the date+time can be used for sorting)
+          return combinedMessages.sort((a, b) => {
+            const dateA = new Date(`${a.date} ${a.time}`);
+            const dateB = new Date(`${b.date} ${b.time}`);
+            return dateA - dateB;
+          });
+        });
+      }
+      
+      setLoading(false);
+      return () => {}; // No cleanup needed for offline mode
+    }
+    
+    // Online mode - use Firestore listener
     const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
     
@@ -150,8 +213,14 @@ export default function ChatDetail() {
           transactionType: data.transactionType,
           date: formattedDate,
           time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          pending: false
         });
       });
+      
+      // Cache messages for offline access
+      if (isOnline && messageList.length > 0) {
+        cacheMessages(chatRoomId, messageList);
+      }
       
       setMessages(messageList);
       setLoading(false);
@@ -212,17 +281,40 @@ export default function ChatDetail() {
               balance: newUserBalance
             }
           });
+          
+          // Update local balance state
+          setBalance(newUserBalance);
+          setCurrentUserBalance(newUserBalance);
         } else {
           // Update both user balances in the chatroom
           await updateDoc(chatRoomRef, {
             [`balances.${user.id}`]: newUserBalance,
           });
+          
+          setBalance(newUserBalance);
+          setCurrentUserBalance(newUserBalance);
         }
-
-        setBalance(newUserBalance);
-        setCurrentUserBalance(currentUserBalance);
-        setPartnerBalance(partnerUserBalance);
       }
+
+      // Create a formatted message for display
+      const timestamp = new Date();
+      const day = timestamp.getDate();
+      const month = timestamp.toLocaleString('en-US', { month: 'short' });
+      const year = timestamp.getFullYear();
+      const formattedDate = `${day} ${month} ${year}`;
+      const formattedTime = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Create a formatted message object for display
+      const formattedMessage = {
+        id: `local_${timestamp.getTime()}_${Math.random().toString(36).substr(2, 9)}`,
+        text: message,
+        senderId: user.id,
+        amount: amount ? parseFloat(amount) : null,
+        transactionType: amount ? transactionType : null,
+        date: formattedDate,
+        time: formattedTime,
+        pending: !isOnline
+      };
 
       if (!isOnline) {
         // Store message for later sync with sender info for notifications
@@ -236,28 +328,41 @@ export default function ChatDetail() {
           },
           receiverId: chatPartner.id
         });
-        // Add message to local state
-        const timestamp = new Date();
-        const newMessage = {
-          id: `local_${timestamp.getTime()}`,
-          ...messageData,
-          date: timestamp.toLocaleDateString(),
-          time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, newMessage]);
+        
+        // Add to message queue for better offline handling
+        const queuedMessage = await addMessageToQueue(chatRoomId, messageData);
+        
+        // Add message to local state immediately for display
+        setMessages(prev => [...prev, formattedMessage]);
+        
+        // Update local chat room data
+        const lastMessageText = message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} ৳${parseFloat(amount).toFixed(2)}` : 'Sent a message');
+        
+        // Store the last message info in AsyncStorage for the chat list
+        await savePendingOperation({
+          type: 'chatRoom',
+          chatRoomId,
+          data: {
+            lastMessage: lastMessageText,
+            lastMessageTime: serverTimestamp(),
+            lastOfflineMessageTime: new Date().toISOString()
+          }
+        });
+        
+        // Show feedback to user that message is queued
+        showNetworkNotification('Message Queued', 'Your message will be sent when you are back online.');
       } else {
+        // Online mode - add directly to Firestore
         await addDoc(messagesRef, messageData);
-      }
-      
-      // Update the chatRoom document with the last message and timestamp
-      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
-      await updateDoc(chatRoomRef, {
-        lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} ৳${parseFloat(amount).toFixed(2)}` : 'Sent an empty message'),
-        lastMessageTime: serverTimestamp()
-      });
+        
+        // Update the chatRoom document with the last message and timestamp
+        const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+        await updateDoc(chatRoomRef, {
+          lastMessage: message.trim() || (amount ? `${transactionType === 'add' ? '+' : '-'} ৳${parseFloat(amount).toFixed(2)}` : 'Sent a message'),
+          lastMessageTime: serverTimestamp()
+        });
 
-      // Send push notification to chat partner
-      if (isOnline) {
+        // Send push notification to chat partner
         try {
           await sendPushNotification(
             chatPartner.id,

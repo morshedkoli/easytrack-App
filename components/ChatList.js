@@ -16,7 +16,7 @@ export default function ChatList() {
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const { offlineMode } = useNetwork();
+  const { offlineMode, getCachedChatLists, cacheChatLists, isOnline, messageQueue } = useNetwork();
   
   // Firestore is initialized in firebase/firestore.js with offline persistence
 
@@ -32,6 +32,29 @@ export default function ChatList() {
       };
     }
   }, [user]);
+  
+  // Use cached chat lists when offline
+  useEffect(() => {
+    if (offlineMode) {
+      const cachedChats = getCachedChatLists();
+      if (cachedChats && cachedChats.length > 0) {
+        // Mark chats as cached when in offline mode
+        const markedChats = cachedChats.map(chat => {
+          // Check if there are pending messages for this chat
+          const pendingMessages = messageQueue[chat.id] || [];
+          return {
+            ...chat,
+            cached: true,
+            pendingMessages: pendingMessages.length,
+            lastSyncTime: chat.lastSyncTime || 'Unknown'
+          };
+        });
+        setAllUsers(markedChats);
+        setChats(markedChats);
+        setLoading(false);
+      }
+    }
+  }, [offlineMode, getCachedChatLists, messageQueue]);
 
   const setupChatRoomListeners = () => {
     if (!user || !user.id) return;
@@ -98,6 +121,11 @@ export default function ChatList() {
       // Update both state variables with the new data
       setAllUsers(updatedChats);
       setChats(updatedChats);
+      
+      // Cache chat lists for offline use
+      if (isOnline) {
+        cacheChatLists(updatedChats);
+      }
     });
 
     return unsubscribe;
@@ -203,6 +231,11 @@ export default function ChatList() {
       
       setAllUsers(sortedUsers);
       setChats(sortedUsers);
+      
+      // Cache chat lists for offline access
+      if (isOnline) {
+        cacheChatLists(sortedUsers);
+      }
     } catch (error) {
       console.error('Error fetching friends:', error);
     } finally {
@@ -260,28 +293,26 @@ export default function ChatList() {
 
 
   return (
-    <View className="flex-1 bg-surface dark:bg-surface-dark">
+    <View className="flex-1 bg-background dark:bg-background-dark">
+      {/* Offline Banner */}
       {offlineMode && (
         <View className="bg-warning/20 px-3 py-2 flex-row items-center justify-center">
           <Ionicons name="cloud-offline" size={18} color="#f59e0b" />
           <Text className="ml-2 text-warning font-medium">Offline Mode - Viewing cached data</Text>
         </View>
       )}
-      <View className="p-3 bg-surface dark:bg-surface-dark border-b border-secondary/20 dark:border-secondary/30">
-        <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg px-3 py-2">
-          <Ionicons name="search" size={20} color="#475569" />
+      
+      {/* Search Bar */}
+      <View className="p-4 bg-surface dark:bg-surface-dark">
+        <View className="flex-row items-center bg-background dark:bg-background-dark rounded-lg px-4 py-2">
+          <Ionicons name="search" size={20} color="#9ca3af" />
           <TextInput
-            className="flex-1 ml-2 text-base text-text-primary dark:text-text-primary-dark"
-            placeholder="Search"
-            placeholderTextColor="#475569"
+            className="flex-1 ml-2 text-text-primary dark:text-text-primary-dark"
+            placeholder="Search chats"
+            placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={handleSearch}
           />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => handleSearch('')} style={{ marginLeft: 8 }}>
-              <Ionicons name="close-circle" size={20} color="#475569" />
-            </TouchableOpacity>
-          ) : null}
         </View>
       </View>
 
